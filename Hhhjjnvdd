@@ -1,0 +1,207 @@
+<?php
+// index.php - Full Protection Code
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protected Page</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>Welcome to Protected Page</h1>
+        <p>This page is protected against inspection.</p>
+        <!-- Your content here -->
+    </div>
+
+<script>
+// Method 1: Disable Right Click
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    showWarning();
+});
+
+// Method 2: Disable Keyboard Shortcuts
+document.addEventListener('keydown', function(e) {
+    // Block F12
+    if(e.keyCode === 123) {
+        e.preventDefault();
+        showWarning();
+        return false;
+    }
+    
+    // Block Ctrl+Shift+I
+    if(e.ctrlKey && e.shiftKey && e.keyCode === 73) {
+        e.preventDefault();
+        showWarning();
+        return false;
+    }
+    
+    // Block Ctrl+Shift+J
+    if(e.ctrlKey && e.shiftKey && e.keyCode === 74) {
+        e.preventDefault();
+        showWarning();
+        return false;
+    }
+    
+    // Block Ctrl+Shift+C
+    if(e.ctrlKey && e.shiftKey && e.keyCode === 67) {
+        e.preventDefault();
+        showWarning();
+        return false;
+    }
+    
+    // Block Ctrl+U (View Source)
+    if(e.ctrlKey && e.keyCode === 85) {
+        e.preventDefault();
+        showWarning();
+        return false;
+    }
+    
+    // Block Ctrl+S (Save Page)
+    if(e.ctrlKey && e.keyCode === 83) {
+        e.preventDefault();
+        showWarning();
+        return false;
+    }
+});
+
+// Method 3: Detect DevTools Opening (Advanced)
+let devtools = function(){};
+devtools.toString = function() {
+    showWarning();
+    window.location.href = "blocked.php"; // Redirect to warning page
+    return '';
+};
+
+console.log('%c', devtools);
+console.clear = function() {
+    showWarning();
+};
+
+// Method 4: Full Screen Protection (Prevents Menu Bar)
+function requestFullScreen() {
+    var el = document.documentElement;
+    if(el.requestFullscreen) {
+        el.requestFullscreen();
+    } else if(el.mozRequestFullScreen) {
+        el.mozRequestFullScreen();
+    } else if(el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+    } else if(el.msRequestFullscreen) {
+        el.msRequestFullscreen();
+    }
+}
+
+// Enter full screen when page loads
+window.onload = function() {
+    requestFullScreen();
+    document.addEventListener('fullscreenchange', exitHandler);
+    document.addEventListener('mozfullscreenchange', exitHandler);
+    document.addEventListener('webkitfullscreenchange', exitHandler);
+    document.addEventListener('msfullscreenchange', exitHandler);
+};
+
+function exitHandler() {
+    if(!document.fullscreenElement && 
+       !document.webkitIsFullScreen && 
+       !document.mozFullScreen && 
+       !document.msFullscreenElement) {
+        requestFullScreen();
+        showWarning();
+    }
+}
+
+// Method 5: Check for DevTools periodically
+setInterval(function() {
+    const widthThreshold = window.outerWidth - window.innerWidth > 160;
+    const heightThreshold = window.outerHeight - window.innerHeight > 160;
+    
+    if((widthThreshold || heightThreshold) && !window.debugging) {
+        window.location.href = "blocked.php";
+    }
+}, 1000);
+
+// Method 6: Detect iframe inspection
+if(window.self !== window.top) {
+    window.top.location = window.self.location;
+}
+
+// Method 7: Disable text selection
+document.addEventListener('selectstart', function(e) {
+    e.preventDefault();
+    return false;
+});
+
+// Method 8: Disable drag and drop
+document.addEventListener('dragstart', function(e) {
+    e.preventDefault();
+    return false;
+});
+
+// Method 9: Show warning message
+function showWarning() {
+    alert("⚠️ Inspection is not allowed on this page!");
+    document.body.innerHTML = '<h1 style="color:red;text-align:center;">Access Blocked!</h1>' +
+                             '<p style="text-align:center;">Inspection tools are disabled on this page.</p>';
+    
+    // Clear console
+    console.clear();
+    
+    // Self-destruct after 3 seconds
+    setTimeout(function() {
+        document.body.innerHTML = '<h1 style="color:red;text-align:center;">Page Blocked</h1>';
+        window.stop();
+    }, 3000);
+}
+
+// Method 10: Blur page when tab loses focus
+window.addEventListener('blur', function() {
+    document.title = "⚠️ Don't Inspect This Page!";
+    showWarning();
+});
+
+window.addEventListener('focus', function() {
+    document.title = "Protected Page";
+});
+
+// Extra: Encrypt HTML content (Optional - makes code unreadable)
+document.addEventListener('DOMContentLoaded', function() {
+    // This will make HTML source look scrambled
+    document.body.setAttribute('oncopy', 'return false');
+    document.body.setAttribute('oncut', 'return false');
+    document.body.setAttribute('onpaste', 'return false');
+});
+
+// Nuclear option: Close window if devtools detected
+window.addEventListener('resize', function() {
+    if(window.outerHeight - window.innerHeight > 200 || 
+       window.outerWidth - window.innerWidth > 200) {
+        window.close();
+        window.location.href = "about:blank";
+    }
+});
+</script>
+
+<!-- Add more protection via meta tags -->
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="googlebot" content="noindex, nofollow">
+</body>
+</html>
