@@ -1,0 +1,120 @@
+<?php
+session_start();
+
+// Token ka time 40 seconds
+$token_expiry = 40;
+
+// Agar session me token nahi hai ya expire ho gaya hai
+if (!isset($_SESSION['url_token']) || !isset($_SESSION['token_created'])) {
+    // Naya token generate karo
+    generateNewToken();
+} else {
+    // Check karo token expire hua ya nahi
+    $time_passed = time() - $_SESSION['token_created'];
+    if ($time_passed > $token_expiry) {
+        // Token expire ho gaya, naya banao
+        generateNewToken();
+    } else {
+        // Token valid hai, check karo URL me bhi hai ya nahi
+        handleValidToken();
+    }
+}
+
+// Naya token generate karne ka function
+function generateNewToken() {
+    global $token_expiry;
+    
+    // 30 characters ka random string
+    $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    $token = '';
+    for ($i = 0; $i < 30; $i++) {
+        $token .= $chars[rand(0, strlen($chars)-1)];
+    }
+    
+    // Session me save karo
+    $_SESSION['url_token'] = $token;
+    $_SESSION['token_created'] = time();
+    
+    // Cookie me save karo (40 seconds ke liye)
+    setcookie('page_token', $token, time() + $token_expiry, '/');
+    
+    // Redirect karo token ke saath
+    redirectWithToken($token);
+}
+
+// Valid token handle karne ka function
+function handleValidToken() {
+    $current_token = $_SESSION['url_token'];
+    
+    // Agar URL me token parameter hai
+    if (isset($_GET['t'])) {
+        $url_token = $_GET['t'];
+        
+        // Agar URL token aur session token match nahi karte
+        if ($url_token !== $current_token) {
+            // Redirect karo correct token ke saath
+            redirectWithToken($current_token);
+        }
+    } else {
+        // URL me token nahi hai, add karo
+        redirectWithToken($current_token);
+    }
+    
+    // Cookie bhi update karo agar needed ho
+    if (!isset($_COOKIE['page_token']) || $_COOKIE['page_token'] !== $current_token) {
+        setcookie('page_token', $current_token, time() + 40, '/');
+    }
+}
+
+// Redirect karne ka function
+function redirectWithToken($token) {
+    $current_url = strtok($_SERVER["REQUEST_URI"], '?');
+    $redirect_url = $current_url . '?t=' . $token;
+    
+    // Agar already isi URL pe hai to redirect nahi karna
+    if ($_SERVER['REQUEST_URI'] !== $redirect_url) {
+        header("Location: " . $redirect_url);
+        exit();
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Aapka existing head content -->
+    <title>Your Page</title>
+    
+    <!-- Auto refresh after 40 seconds -->
+    <meta http-equiv="refresh" content="41">
+</head>
+<body>
+    <!-- Aapka existing body content -->
+    
+    <!-- Optional: Token info display (agar chahiye to) -->
+    <div style="display: none;">
+        Token: <?php echo isset($_SESSION['url_token']) ? $_SESSION['url_token'] : 'None'; ?>
+        Expires in: <?php 
+            if (isset($_SESSION['token_created'])) {
+                echo 40 - (time() - $_SESSION['token_created']) . ' seconds';
+            }
+        ?>
+    </div>
+    
+    <!-- Aapka existing page content yahan rahega -->
+    
+    <script>
+    // Client-side: Agar URL change kiya to auto-correct
+    setTimeout(function() {
+        var currentUrl = window.location.href;
+        var tokenParam = '<?php echo isset($_GET['t']) ? $_GET['t'] : ""; ?>';
+        var sessionToken = '<?php echo isset($_SESSION['url_token']) ? $_SESSION['url_token'] : ""; ?>';
+        
+        if (tokenParam !== sessionToken && sessionToken !== '') {
+            var newUrl = window.location.pathname + '?t=' + sessionToken;
+            window.history.replaceState({}, document.title, newUrl);
+        }
+    }, 100);
+    </script>
+</body>
+</html>
