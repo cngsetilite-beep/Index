@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToTok - Download Free</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.8rem;
+            color: #2c3e50;
+        }
+        
+        .download-link {
+            background-color: #3498db;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .download-link:hover {
+            background-color: #2980b9;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 60px 0;
+            margin-bottom: 40px;
+        }
+        
+        .main-heading {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .sub-heading {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+        
+        .highlight-text {
+            color: #3498db;
+            font-weight: 600;
+        }
+        
+        .version-info {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin: 30px 0;
+        }
+        
+        .security-badges {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .badge-item {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            text-align: center;
+            min-width: 150px;
+        }
+        
+        .store-logos {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .store-logo {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 10px 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 50px 0 20px;
+            margin-top: 50px;
+        }
+        
+        .footer h5 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .footer-links a {
+            color: #bdc3c7;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 10px;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: #3498db;
+        }
+        
+        .copyright {
+            border-top: 1px solid #34495e;
+            padding-top: 20px;
+            margin-top: 30px;
+            text-align: center;
+            color: #95a5a6;
+            font-size: 0.9rem;
+        }
+        
+        .download-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-decoration: none;
+            margin: 15px 0;
+        }
+        
+        .download-btn:hover {
+            background-color: #c0392b;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .alert-box {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 30px 0;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 40px 0;
+            }
+            
+            .main-heading {
+                font-size: 1.8rem;
+            }
+            
+            .security-badges, .store-logos {
+                gap: 10px;
+            }
+            
+            .badge-item, .store-logo {
+                min-width: 120px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .footer .col-md-3 {
+                margin-bottom: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-comment-alt text-primary me-2"></i>
+                TOTOK
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">News</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Security</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="download-link" href="#">Download</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1 class="main-heading">Thank you for joining the ToTok community!</h1>
+            <p class="sub-heading">Connect with friends, family and colleagues with high-quality voice and video calls</p>
+            <div class="mt-4">
+                <a href="totok.ai/download" class="download-link mb-3 mb-md-0">
+                    <i class="fas fa-download me-2"></i>totok.ai/download
+                </a>
+                <p class="mt-3 highlight-text">lots more!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Alert/Clarification Box -->
+        <div class="alert-box">
+            <h4><i class="fas fa-exclamation-circle me-2"></i>ToTok Clarification Message to Latest Google Notification</h4>
+            <p class="mb-2">We have been informed that some of our Android users are receiving Google Play Store notifications not to install ToTok.</p>
+            <p class="mb-0">ToTok is also available on the app stores of other phone makers such as Vivo.</p>
+        </div>
+        
+        <!-- Download Section -->
+        <div class="text-center my-5">
+            <h2 class="main-heading">ToTok</h2>
+            <p class="text-muted">Click to view download tips</p>
+            
+            <h3 class="mt-4">Download the latest version of ToTok for Android</h3>
+            <a href="#" class="download-btn">
+                <i class="fas fa-download me-2"></i>Free Download
+            </a>
+            
+            <!-- Version Info -->
+            <div class="version-info d-inline-block">
+                <p class="mb-1"><strong>Version 1.9.14.455</strong></p>
+                <p class="mb-0 text-muted">Released on 2026.01.20 15:00 (UTC +04:00)</p>
+            </div>
+            
+            <!-- Security Badges -->
+            <div class="my-4">
+                <h5 class="mb-3">Security verified by</h5>
+                <div class="security-badges">
+                    <div class="badge-item">
+                        <i class="fas fa-shield-alt text-success fa-2x mb-2"></i>
+                        <p class="mb-0">CM Security</p>
+                    </div>
+                    <div class="badge-item">
+                        <i class="fas fa-lock text-primary fa-2x mb-2"></i>
+                        <p class="mb-0">Lookout Security</p>
+                    </div>
+                    <div class="badge-item">
+                        <i class="fas fa-check-circle text-danger fa-2x mb-2"></i>
+                        <p class="mb-0">McAfee</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Available on -->
+            <div class="my-4">
+                <h5 class="mb-3">Also available on</h5>
+                <div class="store-logos">
+                    <div class="store-logo">
+                        <i class="fab fa-huawei me-2"></i>HUAWEI AppGallery
+                    </div>
+                    <div class="store-logo">
+                        <i class="fas fa-mobile-alt me-2"></i>SAMSUNG Galaxy Store
+                    </div>
+                    <div class="store-logo">
+                        <i class="fas fa-shopping-bag me-2"></i>GetApps
+                    </div>
+                    <div class="store-logo">
+                        <i class="fas fa-box-open me-2"></i>APKPure
+                    </div>
+                    <div class="store-logo">
+                        <i class="fas fa-cloud-download-alt me-2"></i>uptodown
+                    </div>
+                    <div class="store-logo">
+                        <i class="fas fa-store me-2"></i>Aptoide
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 col-6">
+                    <h5>TOTOK</h5>
+                    <div class="footer-links">
+                        <a href="#">Features</a>
+                        <a href="#">News</a>
+                        <a href="#">Security</a>
+                        <a href="#">Terms of Use</a>
+                        <a href="#">Privacy Policy</a>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-6">
+                    <h5>COMPANY</h5>
+                    <div class="footer-links">
+                        <a href="#">About</a>
+                        <a href="#">Careers</a>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-6">
+                    <h5>DOWNLOAD</h5>
+                    <div class="footer-links">
+                        <a href="#">
+                            <i class="fab fa-android me-2"></i>Android
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-6">
+                    <h5>HELP</h5>
+                    <div class="footer-links">
+                        <a href="#">FAQ</a>
+                        <a href="#">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p class="mb-0">All rights reserved, 2026 © TOTOK TECHNOLOGY LTD</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
