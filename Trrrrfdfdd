@@ -1,0 +1,126 @@
+<?php
+session_start();
+
+// Configuration
+$token_name = 'url_token';
+$token_lifetime = 40; // seconds
+$param_name = 'token';
+
+// Generate a random string
+function generateToken($length = 20) {
+    $chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $token = '';
+    for ($i = 0; $i < $length; $i++) {
+        $token .= $chars[rand(0, strlen($chars) - 1)];
+    }
+    return '-4_' . $token; // Prefix with "-4_" as in your example
+}
+
+// Check if token is expired
+function isTokenExpired($created_time) {
+    global $token_lifetime;
+    return (time() - $created_time) > $token_lifetime;
+}
+
+// Main logic
+if (isset($_GET[$param_name])) {
+    $url_token = $_GET[$param_name];
+    
+    // Validate token from URL against session
+    if (isset($_SESSION[$token_name]) && 
+        isset($_SESSION['token_time']) &&
+        $_SESSION[$token_name] === $url_token &&
+        !isTokenExpired($_SESSION['token_time'])) {
+        
+        // Valid token - set/renew cookie
+        setcookie($token_name, $url_token, time() + $token_lifetime, '/');
+    } else {
+        // Token invalid/expired - generate new
+        createNewToken();
+    }
+} else {
+    // No token in URL - check cookie
+    if (isset($_COOKIE[$token_name]) && 
+        isset($_SESSION[$token_name]) &&
+        $_COOKIE[$token_name] === $_SESSION[$token_name] &&
+        isset($_SESSION['token_time']) &&
+        !isTokenExpired($_SESSION['token_time'])) {
+        
+        // Redirect to same page with token
+        $redirect_url = $_SERVER['PHP_SELF'] . '?' . $param_name . '=' . $_SESSION[$token_name];
+        header("Location: " . $redirect_url);
+        exit();
+    } else {
+        // Create new token
+        createNewToken();
+    }
+}
+
+// Function to create new token and redirect
+function createNewToken() {
+    global $token_name, $param_name, $token_lifetime;
+    
+    $new_token = generateToken();
+    
+    // Store in session with timestamp
+    $_SESSION[$token_name] = $new_token;
+    $_SESSION['token_time'] = time();
+    
+    // Set cookie
+    setcookie($token_name, $new_token, time() + $token_lifetime, '/');
+    
+    // Redirect to self with token
+    $redirect_url = $_SERVER['PHP_SELF'] . '?' . $param_name . '=' . $new_token;
+    header("Location: " . $redirect_url);
+    exit();
+}
+
+// Display current page
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Token System</title>
+    <meta http-equiv="refresh" content="<?php echo $token_lifetime + 1; ?>">
+</head>
+<body>
+    <h1>Token System Active</h1>
+    <p><strong>Current Token:</strong> <?php echo htmlspecialchars($_GET[$param_name] ?? 'None'); ?></p>
+    <p><strong>Token Expires in:</strong> 
+        <?php 
+        if (isset($_SESSION['token_time'])) {
+            $remaining = $token_lifetime - (time() - $_SESSION['token_time']);
+            echo max(0, $remaining) . ' seconds';
+        }
+        ?>
+    </p>
+    <p><strong>Page URL:</strong> <?php echo htmlspecialchars($_SERVER['REQUEST_URI']); ?></p>
+    
+    <script>
+        // Auto-refresh when token expires (client-side backup)
+        setTimeout(function() {
+            window.location.href = window.location.pathname;
+        }, <?php echo $token_lifetime * 1000; ?>);
+        
+        // Display countdown
+        var countdown = <?php 
+            if (isset($_SESSION['token_time'])) {
+                echo $token_lifetime - (time() - $_SESSION['token_time']);
+            } else {
+                echo 0;
+            }
+        ?>;
+        
+        function updateCountdown() {
+            if (countdown > 0) {
+                document.getElementById('countdown').innerHTML = countdown + ' seconds';
+                countdown--;
+                setTimeout(updateCountdown, 1000);
+            } else {
+                document.getElementById('countdown').innerHTML = 'Expired!';
+            }
+        }
+        updateCountdown();
+    </script>
+</body>
+</html>
