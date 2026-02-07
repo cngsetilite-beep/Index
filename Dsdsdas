@@ -1,0 +1,54 @@
+<?php
+session_start();
+
+/*
+  Agar URL me parameters aaye
+  to unko session me save karo
+*/
+if (!empty($_GET)) {
+    $_SESSION['real_params'] = $_GET;
+}
+
+/*
+  Agar refresh ya fake URL se aaye
+  to session se parameters wapas lao
+*/
+$params = $_SESSION['real_params'] ?? [];
+
+$a = $params['a'] ?? '';
+$b = $params['b'] ?? '';
+$c = $params['c'] ?? '';
+$d = $params['d'] ?? '';
+?>
+<!DOCTYPE html>
+<html>
+<head>
+<title>Masked URL Safe</title>
+
+<script>
+(function () {
+    // Fake URL (chahe to random bana sakte ho)
+    const fakeUrl = "hfhxhdhdhdhhdhdhdhdbdhhdhdhdhdhfbhdjdbdbfjfjfjfjfjjf";
+
+    // Page load hote hi fake URL dikhao
+    history.replaceState({}, "", "/" + fakeUrl);
+
+    // Back / forward / URL change detect
+    window.addEventListener("popstate", function () {
+        history.replaceState({}, "", "/" + fakeUrl);
+    });
+})();
+</script>
+</head>
+
+<body>
+
+<h2>✅ Original Page Loaded Safely</h2>
+
+<p>A = <?= htmlspecialchars($a) ?></p>
+<p>B = <?= htmlspecialchars($b) ?></p>
+<p>C = <?= htmlspecialchars($c) ?></p>
+<p>D = <?= htmlspecialchars($d) ?></p>
+
+</body>
+</html>
