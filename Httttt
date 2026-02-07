@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# Agar real file ya folder hai to ignore
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Har random / fake URL index.php par bhejo
+RewriteRule ^.*$ index.php [L,QSA]
