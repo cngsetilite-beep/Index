@@ -1,0 +1,10 @@
+<?php
+$params = http_build_query([
+    "a" => 10,
+    "b" => 20,
+    "c" => 30,
+    "d" => 40
+]);
+
+header("Location: /index.php?$params");
+exit;
