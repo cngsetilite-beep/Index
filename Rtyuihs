@@ -1,0 +1,833 @@
+<?php
+// Sample gift card data - in real app this would come from session/database
+$gift_cards = [
+    [
+        'id' => 1,
+        'image' => 'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/GC_GiftCard_RGB_SG_2023?wid=400&hei=400&fmt=jpeg&qlt=95',
+        'image_style' => 'geometric',
+        'price' => 25.00,
+        'to_name' => 'Hamad',
+        'to_email' => 'hamad66@hotmail.com',
+        'from_name' => 'Hamad',
+        'from_email' => 'hamad66@hotmail.com',
+        'message' => 'Hello',
+    ],
+    [
+        'id' => 2,
+        'image' => 'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/GC_GiftCard_RGB_SG_2023?wid=400&hei=400&fmt=jpeg&qlt=95',
+        'image_style' => 'abstract',
+        'price' => 25.00,
+        'to_name' => 'Hamad',
+        'to_email' => 'hamad636@gmail.com',
+        'from_name' => 'Hmamad',
+        'from_email' => 'hamad66@hotmail.com',
+        'message' => 'Hbdvxv',
+    ],
+];
+
+$subtotal = array_sum(array_column($gift_cards, 'price'));
+$total = $subtotal;
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bag - Apple</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+            background: #fff;
+            color: #1d1d1f;
+            font-size: 14px;
+        }
+
+        /* ---- TOP NAV ---- */
+        .global-nav {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 1px solid #d2d2d7;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .global-nav-inner {
+            max-width: 980px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            height: 44px;
+            gap: 0;
+        }
+
+        .global-nav a {
+            color: #1d1d1f;
+            text-decoration: none;
+            font-size: 12px;
+            padding: 0 10px;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+
+        .global-nav a:hover { opacity: 1; }
+
+        .nav-apple-logo {
+            font-size: 18px;
+            padding: 0 12px 0 0;
+            opacity: 0.8;
+        }
+
+        .nav-icons {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            color: #1d1d1f;
+            font-size: 15px;
+            opacity: 0.8;
+        }
+
+        /* ---- PAGE CONTENT ---- */
+        .page-wrap {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+
+        /* ---- BAG HEADER ---- */
+        .bag-header {
+            text-align: center;
+            padding: 28px 0 18px;
+        }
+
+        .bag-total-text {
+            font-size: 19px;
+            font-weight: 600;
+            color: #1d1d1f;
+            letter-spacing: -0.3px;
+        }
+
+        .bag-delivery {
+            font-size: 12px;
+            color: #6e6e73;
+            margin-top: 4px;
+        }
+
+        /* ---- CHECKOUT BUTTONS ---- */
+        .checkout-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 16px 0 28px;
+        }
+
+        .btn-checkout {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            font-size: 15px;
+            font-weight: 400;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            transition: opacity 0.2s;
+        }
+
+        .btn-checkout:hover { opacity: 0.85; }
+
+        .btn-blue {
+            background: #0071e3;
+            color: #fff;
+        }
+
+        .btn-black {
+            background: #000;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .apple-pay-icon {
+            font-size: 17px;
+            letter-spacing: -1px;
+        }
+
+        /* ---- DIVIDER ---- */
+        .divider {
+            border: none;
+            border-top: 1px solid #d2d2d7;
+            margin: 8px 0;
+        }
+
+        /* ---- GIFT CARD ITEM ---- */
+        .bag-item {
+            padding: 20px 0 16px;
+            border-bottom: 1px solid #d2d2d7;
+        }
+
+        .bag-item:last-of-type {
+            border-bottom: none;
+        }
+
+        .item-image-wrap {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .item-image-wrap img {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        /* SVG gift card art placeholders */
+        .gift-card-svg {
+            width: 130px;
+            height: 130px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .item-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .item-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1d1d1f;
+        }
+
+        .item-qty {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+            font-size: 13px;
+            color: #1d1d1f;
+        }
+
+        .qty-arrow {
+            font-size: 10px;
+            color: #6e6e73;
+        }
+
+        .item-price {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1d1d1f;
+            white-space: nowrap;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: flex-end;
+            margin-top: 4px;
+        }
+
+        .item-actions a {
+            color: #0071e3;
+            text-decoration: none;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .item-actions a:hover { text-decoration: underline; }
+
+        /* ---- GIFT CARD DETAILS BOX ---- */
+        .gc-details {
+            background: #f5f5f7;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin-top: 12px;
+            font-size: 12px;
+            color: #1d1d1f;
+            line-height: 1.7;
+        }
+
+        .gc-details-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .gc-details-header .label {
+            font-weight: 600;
+        }
+
+        .gc-details-header .edit-link {
+            color: #0071e3;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .gc-details-header .edit-link:hover { text-decoration: underline; }
+
+        .gc-icon {
+            width: 16px;
+            height: 16px;
+            background: #6e6e73;
+            border-radius: 3px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .plus-circle {
+            color: #0071e3;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .gc-field { line-height: 1.6; }
+        .gc-field strong { font-weight: 600; }
+
+        .arrives-text {
+            font-size: 12px;
+            color: #1d1d1f;
+            margin-top: 10px;
+        }
+
+        /* ---- ORDER SUMMARY ---- */
+        .order-summary {
+            padding: 16px 0;
+            border-top: 1px solid #d2d2d7;
+            margin-top: 8px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            padding: 5px 0;
+            color: #1d1d1f;
+        }
+
+        .summary-row.total {
+            font-weight: 600;
+            font-size: 15px;
+            border-top: 1px solid #d2d2d7;
+            padding-top: 10px;
+            margin-top: 4px;
+        }
+
+        .daily-cash-link {
+            display: block;
+            color: #0071e3;
+            font-size: 12px;
+            text-align: right;
+            text-decoration: none;
+            margin-top: 2px;
+        }
+
+        /* ---- HELP ---- */
+        .help-row {
+            text-align: center;
+            font-size: 13px;
+            color: #1d1d1f;
+            padding: 18px 0 10px;
+        }
+
+        .help-row a {
+            color: #0071e3;
+            text-decoration: none;
+        }
+
+        .help-row a:hover { text-decoration: underline; }
+
+        /* ---- YOU MAY ALSO LIKE ---- */
+        .also-like {
+            padding: 24px 0 0;
+        }
+
+        .also-like h2 {
+            text-align: center;
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            letter-spacing: -0.3px;
+        }
+
+        .product-card {
+            margin-bottom: 20px;
+        }
+
+        .product-card img {
+            display: block;
+            margin: 0 auto 12px;
+            width: 180px;
+            height: 140px;
+            object-fit: contain;
+        }
+
+        .product-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1d1d1f;
+            margin-bottom: 2px;
+        }
+
+        .product-price {
+            font-size: 13px;
+            color: #1d1d1f;
+            margin-bottom: 12px;
+        }
+
+        /* ---- FOOTER NAV ---- */
+        .footer-nav {
+            background: #f5f5f7;
+            padding: 30px 20px 20px;
+            margin-top: 40px;
+        }
+
+        .footer-grid {
+            max-width: 980px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px 10px;
+        }
+
+        .footer-col h4 {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 8px;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 5px;
+        }
+
+        .footer-col ul li a {
+            font-size: 12px;
+            color: #424245;
+            text-decoration: none;
+        }
+
+        .footer-col ul li a:hover { text-decoration: underline; }
+
+        .footer-bottom {
+            max-width: 980px;
+            margin: 20px auto 0;
+            border-top: 1px solid #d2d2d7;
+            padding-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .footer-bottom p {
+            font-size: 11px;
+            color: #6e6e73;
+        }
+
+        .footer-bottom-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .footer-bottom-links a {
+            font-size: 11px;
+            color: #6e6e73;
+            text-decoration: none;
+        }
+
+        .footer-bottom-links a:hover { text-decoration: underline; }
+
+        /* ---- SVG GIFT CARD ARTS ---- */
+        .gc-art-1 {
+            background: linear-gradient(135deg, #e8e0ff 0%, #ffd6e7 30%, #fff3b0 60%, #c8f0c8 100%);
+        }
+
+        .gc-art-2 {
+            background: linear-gradient(160deg, #ffb3c6 0%, #ff6b9d 25%, #c77dff 50%, #4cc9f0 75%, #90e0ef 100%);
+        }
+
+        @media (max-width: 600px) {
+            .global-nav-inner {
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+            .global-nav-inner::-webkit-scrollbar { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- GLOBAL NAV -->
+<nav class="global-nav">
+    <div class="global-nav-inner">
+        <a href="#" class="nav-apple-logo">&#63743;</a>
+        <a href="#">Store</a>
+        <a href="#">Mac</a>
+        <a href="#">iPad</a>
+        <a href="#">iPhone</a>
+        <a href="#">Watch</a>
+        <a href="#">Vision</a>
+        <a href="#">AirPods</a>
+        <a href="#">TV &amp; Home</a>
+        <a href="#">Entertainment</a>
+        <a href="#">Accessories</a>
+        <a href="#">Support</a>
+        <div class="nav-icons">
+            <button class="nav-icon-btn" title="Search">&#128269;</button>
+            <button class="nav-icon-btn" title="Bag">&#128717;</button>
+        </div>
+    </div>
+</nav>
+
+<!-- PAGE CONTENT -->
+<div class="page-wrap">
+
+    <!-- BAG HEADER -->
+    <div class="bag-header">
+        <p class="bag-total-text">Your bag total is $<?= number_format($total, 2) ?>.</p>
+        <p class="bag-delivery">Free delivery and free returns.</p>
+    </div>
+
+    <!-- CHECKOUT BUTTONS -->
+    <div class="checkout-buttons">
+        <a href="#" class="btn-checkout btn-blue">Check Out</a>
+        <a href="#" class="btn-checkout btn-black">
+            Check out with <span class="apple-pay-icon">&#63743;</span>Pay
+        </a>
+    </div>
+
+    <hr class="divider">
+
+    <!-- GIFT CARD ITEMS -->
+    <?php foreach ($gift_cards as $index => $card): ?>
+    <div class="bag-item">
+        <!-- Gift Card Image (SVG art) -->
+        <div class="item-image-wrap">
+            <?php if ($index === 0): ?>
+            <!-- Geometric colorful Apple logo style -->
+            <svg class="gift-card-svg gc-art-1" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <clipPath id="apple1">
+                        <path d="M65 20 C55 20 46 25 41 33 C36 28 30 26 24 27 C24 40 31 52 41 57 C39 62 38 68 38 74 C38 90 47 104 60 110 C63 111 65 111 65 111 C65 111 67 111 70 110 C83 104 92 90 92 74 C92 68 91 62 89 57 C99 52 106 40 106 27 C100 26 94 28 89 33 C84 25 75 20 65 20Z"/>
+                    </clipPath>
+                </defs>
+                <rect width="130" height="130" fill="#f0eaff"/>
+                <polygon points="65,15 100,40 90,80 65,100 40,80 30,40" fill="#c8b8ff" opacity="0.7"/>
+                <polygon points="65,10 105,45 95,85 65,108 35,85 25,45" fill="#ffb3d9" opacity="0.5"/>
+                <polygon points="50,30 85,30 95,60 65,85 35,60" fill="#ffe08a" opacity="0.6"/>
+                <polygon points="65,25 90,50 80,75 65,90 50,75 40,50" fill="#a8e6cf" opacity="0.7"/>
+                <g clip-path="url(#apple1)">
+                    <rect width="130" height="130" fill="transparent"/>
+                    <polygon points="65,20 105,50 95,90 65,110 35,90 25,50" fill="#8b5cf6" opacity="0.3"/>
+                    <polygon points="40,35 90,30 100,70 65,95 30,70" fill="#f59e0b" opacity="0.3"/>
+                </g>
+                <!-- Apple silhouette outline -->
+                <path d="M65 20 C55 20 46 25 41 33 C36 28 30 26 24 27 C24 40 31 52 41 57 C39 62 38 68 38 74 C38 90 47 104 60 110 C63 111 65 111 65 111 C65 111 67 111 70 110 C83 104 92 90 92 74 C92 68 91 62 89 57 C99 52 106 40 106 27 C100 26 94 28 89 33 C84 25 75 20 65 20Z M65 20 C68 14 72 11 76 10" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            </svg>
+            <?php else: ?>
+            <!-- Abstract colorful Apple logo style -->
+            <svg class="gift-card-svg gc-art-2" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <clipPath id="apple2">
+                        <path d="M65 20 C55 20 46 25 41 33 C36 28 30 26 24 27 C24 40 31 52 41 57 C39 62 38 68 38 74 C38 90 47 104 60 110 C63 111 65 111 65 111 C65 111 67 111 70 110 C83 104 92 90 92 74 C92 68 91 62 89 57 C99 52 106 40 106 27 C100 26 94 28 89 33 C84 25 75 20 65 20Z"/>
+                    </clipPath>
+                </defs>
+                <rect width="130" height="130" fill="#ffb3c6"/>
+                <ellipse cx="50" cy="55" rx="40" ry="50" fill="#ff6b9d" opacity="0.7"/>
+                <ellipse cx="80" cy="70" rx="45" ry="40" fill="#c77dff" opacity="0.6"/>
+                <ellipse cx="65" cy="85" rx="35" ry="30" fill="#4cc9f0" opacity="0.5"/>
+                <rect x="30" y="40" width="70" height="8" fill="#ff9f1c" opacity="0.5" transform="rotate(-20 65 65)"/>
+                <rect x="25" y="65" width="80" height="6" fill="#2ec4b6" opacity="0.4" transform="rotate(15 65 65)"/>
+                <g clip-path="url(#apple2)">
+                    <ellipse cx="55" cy="60" rx="35" ry="45" fill="#f72585" opacity="0.35"/>
+                    <ellipse cx="78" cy="75" rx="40" ry="35" fill="#7209b7" opacity="0.3"/>
+                    <rect x="20" y="50" width="90" height="10" fill="#4361ee" opacity="0.25" transform="rotate(-30 65 65)"/>
+                </g>
+            </svg>
+            <?php endif; ?>
+        </div>
+
+        <!-- Item Info -->
+        <div class="item-title-row">
+            <div>
+                <div class="item-title">Apple Gift Card by Email</div>
+                <div class="item-qty">
+                    <?= $card['id'] ?> <span class="qty-arrow">&#8964;</span>
+                </div>
+            </div>
+            <div>
+                <div class="item-price">$<?= number_format($card['price'], 2) ?></div>
+                <div class="item-actions">
+                    <a href="#">Remove</a>
+                    <a href="#">Save for later</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gift Card Details -->
+        <div class="gc-details">
+            <div class="gc-details-header">
+                <span class="gc-icon">&#9654;</span>
+                <span class="label">Your gift card details</span>
+                &nbsp;|&nbsp;
+                <a href="#" class="edit-link">Edit</a>
+                <span class="plus-circle">&#43;&#9398;</span>
+            </div>
+            <div class="gc-field"><strong>To:</strong><br><?= htmlspecialchars($card['to_name']) ?> (<?= htmlspecialchars($card['to_email']) ?>)</div>
+            <div class="gc-field"><strong>From:</strong><br><?= htmlspecialchars($card['from_name']) ?> (<?= htmlspecialchars($card['from_email']) ?>)</div>
+            <div class="gc-field"><strong>Message:</strong><br><?= htmlspecialchars($card['message']) ?></div>
+        </div>
+
+        <p class="arrives-text">Usually arrives within 1 hour</p>
+    </div>
+    <?php endforeach; ?>
+
+    <!-- ORDER SUMMARY -->
+    <div class="order-summary">
+        <div class="summary-row">
+            <span>Subtotal</span>
+            <span>$<?= number_format($subtotal, 2) ?></span>
+        </div>
+        <div class="summary-row total">
+            <span>Total</span>
+            <span>$<?= number_format($total, 2) ?></span>
+        </div>
+        <a href="#" class="daily-cash-link">Get Daily Cash with Apple Card &#9432;</a>
+    </div>
+
+    <!-- CHECKOUT BUTTONS (bottom) -->
+    <div class="checkout-buttons" style="margin-top:16px;">
+        <a href="#" class="btn-checkout btn-blue">Check Out</a>
+        <a href="#" class="btn-checkout btn-black">
+            Check out with <span class="apple-pay-icon">&#63743;</span>Pay
+        </a>
+    </div>
+
+    <!-- HELP ROW -->
+    <div class="help-row">
+        Need some help? <a href="#">Chat now</a> or call 1-800-MY-APPLE.
+    </div>
+
+    <!-- YOU MAY ALSO LIKE -->
+    <div class="also-like">
+        <h2>You may also like</h2>
+
+        <div class="product-card">
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/MQDB3?wid=400&hei=400&fmt=jpeg&qlt=90" alt="Beats Flex" onerror="this.style.background='#f5f5f7';this.style.padding='20px'">
+            <div class="product-name">Beats Flex — All-Day Wireless Earphones — Beats Black</div>
+            <div class="product-price">$69.99</div>
+            <div style="display:flex;gap:8px;margin-bottom:14px;">
+                <span style="width:20px;height:20px;border-radius:50%;background:#4cc9f0;display:inline-block;border:2px solid #d2d2d7;cursor:pointer;"></span>
+                <span style="width:20px;height:20px;border-radius:50%;background:#000;display:inline-block;border:2px solid #0071e3;cursor:pointer;"></span>
+                <span style="width:20px;height:20px;border-radius:50%;background:#ccc;display:inline-block;border:2px solid #d2d2d7;cursor:pointer;"></span>
+                <span style="width:20px;height:20px;border-radius:50%;background:#c8e6a0;display:inline-block;border:2px solid #d2d2d7;cursor:pointer;"></span>
+            </div>
+            <a href="#" class="btn-checkout btn-blue" style="border-radius:8px;font-size:14px;padding:12px;">Add to Bag</a>
+        </div>
+
+        <div class="product-card" style="margin-top:24px;">
+            <div style="text-align:center;font-size:11px;color:#0071e3;margin-bottom:6px;">Free Engraving</div>
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/airpods-pro-3?wid=400&hei=400&fmt=jpeg&qlt=90" alt="AirPods Pro 3" onerror="this.style.background='#f5f5f7';this.style.padding='20px'">
+            <div class="product-name">AirPods Pro 3</div>
+            <div class="product-price">$249.00</div>
+            <a href="#" class="btn-checkout btn-blue" style="border-radius:8px;font-size:14px;padding:12px;margin-top:10px;">Add to Bag</a>
+        </div>
+
+        <div class="product-card" style="margin-top:24px;">
+            <div style="text-align:center;font-size:11px;color:#0071e3;margin-bottom:6px;">Free Engraving</div>
+            <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/MTJV3?wid=400&hei=400&fmt=jpeg&qlt=90" alt="AirPods 4 ANC" onerror="this.style.background='#f5f5f7';this.style.padding='20px'">
+            <div class="product-name">AirPods 4 with Active Noise Cancellation</div>
+            <div class="product-price">$179.00</div>
+            <a href="#" class="btn-checkout btn-blue" style="border-radius:8px;font-size:14px;padding:12px;margin-top:10px;">Add to Bag</a>
+        </div>
+
+        <div style="text-align:center;margin:20px 0;">
+            <a href="#" style="color:#0071e3;font-size:14px;text-decoration:none;">Show more products &#8964;</a>
+        </div>
+    </div>
+
+</div><!-- end page-wrap -->
+
+<!-- NEW ARRIVALS BANNER -->
+<div style="background:#f5f5f7;padding:40px 20px;text-align:center;margin-top:20px;">
+    <h3 style="font-size:19px;font-weight:600;letter-spacing:-0.3px;">New Arrivals</h3>
+    <p style="font-size:13px;color:#6e6e73;margin:6px 0 10px;">Check out the latest accessories.</p>
+    <a href="#" style="color:#0071e3;font-size:13px;text-decoration:none;">Shop &#8250;</a>
+</div>
+
+<!-- QUESTIONS ABOUT BUYING -->
+<div style="max-width:700px;margin:0 auto;padding:16px 20px;border-bottom:1px solid #d2d2d7;">
+    <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+        <span style="font-size:15px;font-weight:500;">Questions About Buying</span>
+        <span style="font-size:18px;color:#6e6e73;">&#8964;</span>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer-nav">
+    <div style="max-width:980px;margin:0 auto;font-size:11px;color:#6e6e73;margin-bottom:14px;">
+        &#63743; &gt; Bag
+    </div>
+    <div class="footer-grid">
+        <div class="footer-col">
+            <h4>Shop and Learn</h4>
+            <ul>
+                <li><a href="#">Store</a></li>
+                <li><a href="#">Mac</a></li>
+                <li><a href="#">iPad</a></li>
+                <li><a href="#">iPhone</a></li>
+                <li><a href="#">Watch</a></li>
+                <li><a href="#">Vision</a></li>
+                <li><a href="#">AirPods</a></li>
+                <li><a href="#">TV &amp; Home</a></li>
+                <li><a href="#">AirTag</a></li>
+                <li><a href="#">Accessories</a></li>
+                <li><a href="#">Gift Cards</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Apple Wallet</h4>
+            <ul>
+                <li><a href="#">Wallet</a></li>
+                <li><a href="#">Apple Card</a></li>
+                <li><a href="#">Apple Pay</a></li>
+                <li><a href="#">Apple Cash</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Account</h4>
+            <ul>
+                <li><a href="#">Manage Your Apple Account</a></li>
+                <li><a href="#">Apple Store Account</a></li>
+                <li><a href="#">iCloud.com</a></li>
+            </ul>
+            <h4 style="margin-top:16px;">Entertainment</h4>
+            <ul>
+                <li><a href="#">Apple One</a></li>
+                <li><a href="#">Apple TV+</a></li>
+                <li><a href="#">Apple Music</a></li>
+                <li><a href="#">Apple Arcade</a></li>
+                <li><a href="#">Apple Fitness+</a></li>
+                <li><a href="#">Apple News+</a></li>
+                <li><a href="#">Apple Podcasts</a></li>
+                <li><a href="#">Apple Books</a></li>
+                <li><a href="#">App Store</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Apple Store</h4>
+            <ul>
+                <li><a href="#">Find a Store</a></li>
+                <li><a href="#">Genius Bar</a></li>
+                <li><a href="#">Today at Apple</a></li>
+                <li><a href="#">Apple Camp</a></li>
+                <li><a href="#">Apple Store App</a></li>
+                <li><a href="#">Certified Refurbished</a></li>
+                <li><a href="#">Apple Trade In</a></li>
+                <li><a href="#">Financing</a></li>
+                <li><a href="#">Carrier Deals at Apple</a></li>
+                <li><a href="#">Order Status</a></li>
+                <li><a href="#">Shopping Help</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>For Business</h4>
+            <ul>
+                <li><a href="#">Apple and Business</a></li>
+                <li><a href="#">Shop for Business</a></li>
+            </ul>
+            <h4 style="margin-top:16px;">For Education</h4>
+            <ul>
+                <li><a href="#">Apple and Education</a></li>
+                <li><a href="#">Shop for K-12</a></li>
+                <li><a href="#">Shop for College</a></li>
+            </ul>
+            <h4 style="margin-top:16px;">For Healthcare</h4>
+            <ul>
+                <li><a href="#">Apple in Healthcare</a></li>
+                <li><a href="#">Health on Apple Watch</a></li>
+                <li><a href="#">Health Records on iPhone</a></li>
+            </ul>
+            <h4 style="margin-top:16px;">For Government</h4>
+            <ul>
+                <li><a href="#">Shop for Government</a></li>
+                <li><a href="#">Shop for Veterans and Military</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Apple Values</h4>
+            <ul>
+                <li><a href="#">Accessibility</a></li>
+                <li><a href="#">Education</a></li>
+                <li><a href="#">Environment</a></li>
+                <li><a href="#">Inclusion and Diversity</a></li>
+                <li><a href="#">Privacy</a></li>
+                <li><a href="#">Racial Equity and Justice</a></li>
+                <li><a href="#">Supply Chain</a></li>
+            </ul>
+            <h4 style="margin-top:16px;">About Apple</h4>
+            <ul>
+                <li><a href="#">Newsroom</a></li>
+                <li><a href="#">Apple Leadership</a></li>
+                <li><a href="#">Career Opportunities</a></li>
+                <li><a href="#">Investors</a></li>
+                <li><a href="#">Ethics &amp; Compliance</a></li>
+                <li><a href="#">Events</a></li>
+                <li><a href="#">Contact Apple</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <div>
+            <p>More ways to shop: <a href="#" style="color:#0071e3;text-decoration:none;">Find an Apple Store</a> or <a href="#" style="color:#0071e3;text-decoration:none;">other retailer</a> near you. Or call 1-800-MY-APPLE.</p>
+            <p style="margin-top:8px;">Copyright &copy; 2026 Apple Inc. All rights reserved.</p>
+        </div>
+        <div class="footer-bottom-links">
+            <a href="#">Privacy Policy</a>
+            <span style="color:#d2d2d7;">|</span>
+            <a href="#">Terms of Use</a>
+            <span style="color:#d2d2d7;">|</span>
+            <a href="#">Sales and Refunds</a>
+            <span style="color:#d2d2d7;">|</span>
+            <a href="#">Legal</a>
+            <span style="color:#d2d2d7;">|</span>
+            <a href="#">Site Map</a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
