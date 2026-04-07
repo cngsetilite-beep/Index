@@ -1,0 +1,351 @@
+<?php
+// ============================================
+// SERVER-SIDE PROTECTION (PHP)
+// ============================================
+
+// Block direct access to source via ?view-source trick
+if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) === false && 
+    strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'text/html') === false) {
+    http_response_code(403);
+    exit('Access Denied');
+}
+
+// Disable PHP error display (hide server info)
+ini_set('display_errors', 0);
+error_reporting(0);
+
+// Remove server signature headers
+header('X-Powered-By: ');
+header('Server: ');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Pragma: no-cache');
+
+?><!DOCTYPE html>
+<html lang="ur" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protected Page</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+
+    .container {
+      text-align: center;
+      padding: 40px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      max-width: 500px;
+    }
+
+    h1 { font-size: 2rem; margin-bottom: 10px; color: #a78bfa; }
+    p  { font-size: 1rem; opacity: 0.8; line-height: 1.6; }
+
+    .shield {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%,100% { transform: scale(1); }
+      50%      { transform: scale(1.1); }
+    }
+
+    /* Warning overlay when DevTools detected */
+    #devtools-warning {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 999999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #ff4444;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      gap: 20px;
+    }
+    #devtools-warning.active { display: flex; }
+    #devtools-warning span   { font-size: 4rem; }
+  </style>
+</head>
+<body>
+
+  <!-- DevTools Warning Overlay -->
+  <div id="devtools-warning">
+    <span>🚫</span>
+    <p>Developer Tools Band Karein!</p>
+    <small style="color:#aaa;font-size:1rem;">Yeh page inspect karna allowed nahi hai.</small>
+  </div>
+
+  <!-- Your Actual Page Content -->
+  <div class="container">
+    <div class="shield">🛡️</div>
+    <h1>Protected Page</h1>
+    <p>Yahan apna content likhen. Yeh page fully protected hai —<br>
+       koi bhi inspect, view source, ya console use nahi kar sakta.</p>
+  </div>
+
+<script>
+// ============================================
+// 1. RIGHT-CLICK DISABLE
+// ============================================
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  return false;
+}, true);
+
+// ============================================
+// 2. KEYBOARD SHORTCUTS BLOCK
+// ============================================
+document.addEventListener('keydown', function(e) {
+  var key = e.key ? e.key.toLowerCase() : '';
+  var code = e.code ? e.code.toLowerCase() : '';
+
+  // F1–F12 keys
+  if (e.keyCode >= 112 && e.keyCode <= 123) {
+    e.preventDefault(); e.stopPropagation(); return false;
+  }
+
+  // Ctrl / Cmd combinations
+  if (e.ctrlKey || e.metaKey) {
+    var blocked = [
+      'u',  // View Source
+      's',  // Save
+      'a',  // Select All
+      'c',  // Copy
+      'v',  // Paste
+      'x',  // Cut
+      'p',  // Print
+      'f',  // Find
+      'g',  // Find Next
+      'h',  // History / Find-Replace
+      'j',  // Downloads / Console (Firefox)
+      'k',  // Console (some browsers)
+      'i',  // Inspector
+      'l',  // Address bar
+      'n',  // New window
+      't',  // New tab
+      'w',  // Close tab
+      'r',  // Reload
+      'b',  // Bookmarks
+    ];
+    if (blocked.indexOf(key) !== -1) {
+      e.preventDefault(); e.stopPropagation(); return false;
+    }
+
+    // Ctrl+Shift combinations
+    if (e.shiftKey) {
+      var blockedShift = ['i','j','c','k','e','m','p','q','r','s','u'];
+      if (blockedShift.indexOf(key) !== -1) {
+        e.preventDefault(); e.stopPropagation(); return false;
+      }
+    }
+  }
+
+  // Alt+F4 / Alt combinations
+  if (e.altKey && key === 'f4') {
+    e.preventDefault(); return false;
+  }
+}, true);
+
+document.addEventListener('keyup', function(e) {
+  if (e.keyCode >= 112 && e.keyCode <= 123) {
+    e.preventDefault(); return false;
+  }
+}, true);
+
+document.addEventListener('keypress', function(e) {
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault(); return false;
+  }
+}, true);
+
+// ============================================
+// 3. TEXT SELECTION DISABLE
+// ============================================
+document.addEventListener('selectstart', function(e) {
+  e.preventDefault(); return false;
+}, true);
+
+document.addEventListener('dragstart', function(e) {
+  e.preventDefault(); return false;
+}, true);
+
+// ============================================
+// 4. COPY / CUT / PASTE DISABLE
+// ============================================
+['copy','cut','paste'].forEach(function(evt) {
+  document.addEventListener(evt, function(e) {
+    e.preventDefault(); return false;
+  }, true);
+});
+
+// ============================================
+// 5. PRINT DISABLE (Ctrl+P & window.print)
+// ============================================
+window.addEventListener('beforeprint', function(e) {
+  e.preventDefault();
+  document.body.innerHTML = '<h1 style="text-align:center;margin-top:40vh;color:red;">Printing Not Allowed!</h1>';
+});
+
+window.onbeforeprint = function() { return false; };
+
+(function() {
+  var origPrint = window.print;
+  window.print = function() {
+    console.clear();
+    return false;
+  };
+})();
+
+// ============================================
+// 6. DEVTOOLS DETECTION (Multiple Methods)
+// ============================================
+var devtoolsOpen = false;
+var warning = document.getElementById('devtools-warning');
+
+// Method A: Window size difference detection
+function checkDevToolsBySize() {
+  var threshold = 160;
+  var widthDiff  = window.outerWidth  - window.innerWidth;
+  var heightDiff = window.outerHeight - window.innerHeight;
+  if (widthDiff > threshold || heightDiff > threshold) {
+    openWarning();
+  } else {
+    closeWarning();
+  }
+}
+
+// Method B: console.log timing trick
+function checkDevToolsByConsole() {
+  var start = performance.now();
+  // Accessing .id triggers getter when DevTools is open
+  var el = new Image();
+  Object.defineProperty(el, 'id', {
+    get: function() {
+      devtoolsOpen = true;
+      openWarning();
+    }
+  });
+  console.log('%c', el);
+  console.clear();
+}
+
+// Method C: debugger timing
+function checkDebugger() {
+  var start = new Date();
+  debugger;
+  var diff = new Date() - start;
+  if (diff > 100) {
+    openWarning();
+  }
+}
+
+function openWarning() {
+  if (!devtoolsOpen) {
+    devtoolsOpen = true;
+    warning.classList.add('active');
+    // Optionally redirect
+    // window.location.href = 'https://yoursite.com/blocked';
+  }
+}
+
+function closeWarning() {
+  if (devtoolsOpen) {
+    devtoolsOpen = false;
+    warning.classList.remove('active');
+  }
+}
+
+// Run checks repeatedly
+setInterval(checkDevToolsBySize, 500);
+setInterval(checkDevToolsByConsole, 1000);
+setInterval(checkDebugger, 2000);
+
+// ============================================
+// 7. CONSOLE CLEAR & OVERRIDE
+// ============================================
+setInterval(function() { console.clear(); }, 500);
+
+// Override all console methods
+(function() {
+  var noop = function() {};
+  var methods = ['log','warn','error','info','debug','table','dir',
+                 'dirxml','group','groupEnd','time','timeEnd',
+                 'count','trace','profile','profileEnd'];
+  methods.forEach(function(m) {
+    try { console[m] = noop; } catch(e) {}
+  });
+})();
+
+// Warn message in console (discourages hackers)
+Object.defineProperty(console, '_commandLineAPI', {
+  get: function() { throw new Error('Inspect Karna Mana Hai!'); }
+});
+
+// ============================================
+// 8. IFRAME EMBEDDING BLOCK (Clickjacking)
+// ============================================
+if (window.top !== window.self) {
+  window.top.location = window.self.location;
+}
+
+// ============================================
+// 9. DISABLE VIEW-SOURCE VIA KEYBOARD
+// ============================================
+// Already handled above via Ctrl+U block.
+// Extra safety: override document.write
+document.write = function() { return false; };
+
+// ============================================
+// 10. TOUCH LONG-PRESS (Mobile Right Click)
+// ============================================
+document.addEventListener('touchstart', function(e) {
+  if (e.touches.length > 1) { e.preventDefault(); }
+}, { passive: false });
+
+var touchTimer;
+document.addEventListener('touchstart', function() {
+  touchTimer = setTimeout(function() {}, 600);
+}, false);
+document.addEventListener('touchend', function() {
+  clearTimeout(touchTimer);
+}, false);
+
+document.addEventListener('touchmove', function(e) {
+  clearTimeout(touchTimer);
+}, false);
+
+</script>
+
+<?php
+// PHP extra: output buffering to hide source structure
+// Add this at top of file: ob_start();
+// Add this at bottom:      ob_end_flush();
+?>
+
+</body>
+</html>
