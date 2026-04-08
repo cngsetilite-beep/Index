@@ -1,0 +1,415 @@
+<?php
+// ============================================
+// PHP SERVER-SIDE PROTECTION
+// ============================================
+ob_start();
+ini_set('display_errors', 0);
+error_reporting(0);
+
+header('X-Powered-By: ');
+header('Server: Protected');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Referrer-Policy: no-referrer');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+
+$ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
+if (empty($ua)) { http_response_code(403); exit('Access Denied'); }
+?><!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Protected Page</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{
+    width:100%;height:100%;
+    -webkit-user-select:none!important;
+    -moz-user-select:none!important;
+    -ms-user-select:none!important;
+    user-select:none!important;
+    -webkit-touch-callout:none!important;
+    -webkit-tap-highlight-color:transparent!important;
+  }
+  body{
+    font-family:'Segoe UI',sans-serif;
+    background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;
+  }
+  .box{
+    text-align:center;padding:40px;
+    background:rgba(255,255,255,0.06);
+    border-radius:20px;border:1px solid rgba(255,255,255,0.12);
+    backdrop-filter:blur(12px);max-width:480px;width:90%;
+  }
+  .shield{font-size:3.5rem;margin-bottom:16px;animation:pulse 2s infinite;}
+  h1{font-size:1.8rem;color:#a78bfa;margin-bottom:10px;}
+  p{opacity:.8;line-height:1.7;font-size:.95rem;}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+  #__warn{
+    display:none;
+    position:fixed;inset:0;
+    background:#000!important;
+    z-index:2147483647!important;
+    flex-direction:column;align-items:center;justify-content:center;
+    color:#ff3333;font-size:1.4rem;font-weight:700;
+    text-align:center;gap:16px;padding:20px;
+  }
+  #__warn.on{display:flex!important;}
+  #__warn .ico{font-size:3.5rem;}
+  #__warn small{color:#888;font-size:.9rem;font-weight:400;}
+  #__warn button{
+    margin-top:10px;padding:10px 28px;
+    background:#a78bfa;color:#fff;border:none;
+    border-radius:8px;font-size:1rem;cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- WARNING OVERLAY -->
+<div id="__warn">
+  <div class="ico">🚫</div>
+  <p>Developer Tools / Inspector Band Karein!</p>
+  <small>Yeh page inspect karna allowed nahi hai.</small>
+  <button onclick="location.reload()">Wapis Jao</button>
+</div>
+
+<!-- ✏️ APNA CONTENT YAHAN LIKHEN -->
+<div class="box" id="__content">
+  <div class="shield">🛡️</div>
+  <h1>Protected Page</h1>
+  <p>Yahan apna content likhen.<br>Yeh page fully protected hai.</p>
+</div>
+
+<script>
+(function(W,D){
+'use strict';
+
+var warn    = D.getElementById('__warn');
+var content = D.getElementById('__content');
+var _open   = false;
+
+// ══════════════════════════════════════════════
+// SHOW / HIDE WARNING
+// ══════════════════════════════════════════════
+function showWarn(){
+  if(_open) return;
+  _open = true;
+  warn.className = 'on';
+  if(content) content.style.display = 'none';
+}
+function hideWarn(){
+  _open = false;
+  warn.className = '';
+  if(content) content.style.display = '';
+}
+
+// ══════════════════════════════════════════════
+// 1. RIGHT CLICK BLOCK
+// ══════════════════════════════════════════════
+D.addEventListener('contextmenu',function(e){
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  return false;
+},true);
+
+// ══════════════════════════════════════════════
+// 2. ALL KEYBOARD SHORTCUTS BLOCK
+// ══════════════════════════════════════════════
+D.addEventListener('keydown',function(e){
+  // All F keys F1-F12
+  if(e.keyCode >= 112 && e.keyCode <= 123){
+    e.preventDefault(); e.stopImmediatePropagation(); return false;
+  }
+  // All Ctrl / Cmd combinations
+  if(e.ctrlKey || e.metaKey){
+    e.preventDefault(); e.stopImmediatePropagation(); return false;
+  }
+  // Alt+F4
+  if(e.altKey && (e.key||'').toLowerCase() === 'f4'){
+    e.preventDefault(); return false;
+  }
+},true);
+
+D.addEventListener('keyup',function(e){
+  if(e.keyCode >= 112 && e.keyCode <= 123 || e.ctrlKey || e.metaKey){
+    e.preventDefault(); e.stopImmediatePropagation(); return false;
+  }
+},true);
+
+D.addEventListener('keypress',function(e){
+  if(e.ctrlKey || e.metaKey){
+    e.preventDefault(); e.stopImmediatePropagation(); return false;
+  }
+},true);
+
+// ══════════════════════════════════════════════
+// 3. TEXT SELECT / DRAG / COPY BLOCK
+// ══════════════════════════════════════════════
+D.addEventListener('selectstart',function(e){e.preventDefault();return false;},true);
+D.addEventListener('dragstart',  function(e){e.preventDefault();return false;},true);
+['copy','cut','paste'].forEach(function(ev){
+  D.addEventListener(ev,function(e){e.preventDefault();return false;},true);
+});
+
+// ══════════════════════════════════════════════
+// 4. PRINT BLOCK
+// ══════════════════════════════════════════════
+W.addEventListener('beforeprint',function(e){
+  e.preventDefault(); showWarn();
+});
+W.onbeforeprint = function(){ return false; };
+W.print = function(){ return false; };
+
+// ══════════════════════════════════════════════
+// 5. CONSOLE METHODS OVERRIDE + AUTO-CLEAR
+// ══════════════════════════════════════════════
+var _noop = function(){};
+['log','warn','error','info','debug','table','dir','dirxml',
+ 'group','groupCollapsed','groupEnd','time','timeEnd','timeLog',
+ 'count','countReset','assert','trace','profile','profileEnd','clear'
+].forEach(function(m){
+  try{
+    Object.defineProperty(console, m, {
+      get: function(){ return _noop; },
+      set: function(){},
+      configurable: false,
+      enumerable: false
+    });
+  }catch(e){}
+});
+setInterval(function(){ try{ console.clear(); }catch(e){} }, 300);
+
+// ══════════════════════════════════════════════
+// 6. DEVTOOLS DETECT — WINDOW SIZE
+// ══════════════════════════════════════════════
+setInterval(function(){
+  var wd = W.outerWidth  - W.innerWidth;
+  var hd = W.outerHeight - W.innerHeight;
+  if(wd > 150 || hd > 150){ showWarn(); }
+},400);
+
+// ══════════════════════════════════════════════
+// 7. DEVTOOLS DETECT — DEBUGGER TIMING
+//    Works on Android Chrome USB Debugging too
+// ══════════════════════════════════════════════
+setInterval(function(){
+  var s = +new Date();
+  (function(){ debugger; })();
+  if((+new Date() - s) > 80){ showWarn(); }
+},600);
+
+// ══════════════════════════════════════════════
+// 8. DEVTOOLS DETECT — IMAGE GETTER TRICK
+// ══════════════════════════════════════════════
+setInterval(function(){
+  var el = new Image();
+  var hit = false;
+  Object.defineProperty(el, 'id', {
+    get: function(){ hit = true; }
+  });
+  W.requestAnimationFrame && requestAnimationFrame(function(){
+    try{ console.log(el); }catch(e){}
+    if(hit){ showWarn(); }
+  });
+},1500);
+
+// ══════════════════════════════════════════════
+// 9. DEVTOOLS DETECT — toString TRICK
+// ══════════════════════════════════════════════
+setInterval(function(){
+  var n = 0;
+  var r = /./;
+  r.toString = function(){ n++; };
+  try{ console.log('%c', r); }catch(e){}
+  if(n > 0){ showWarn(); }
+},2000);
+
+// ══════════════════════════════════════════════
+// 10. DEVTOOLS DETECT — PERFORMANCE TIMING
+//     Catches Android USB Debugging slow JS
+// ══════════════════════════════════════════════
+setInterval(function(){
+  var t1 = performance.now();
+  for(var i = 0; i < 2000; i++){ void(0); }
+  var diff = performance.now() - t1;
+  if(diff > 60){ showWarn(); }
+},3000);
+
+// ══════════════════════════════════════════════
+// 11. MOBILE TOOL GLOBALS DETECT
+//     Eruda, vConsole, Chrome Mobile Debug etc.
+// ══════════════════════════════════════════════
+setInterval(function(){
+  var tools = [
+    'eruda','vConsole','VConsole','__vconsole',
+    'RemoteDebugger','__eruda','eruda',
+    '__REACT_DEVTOOLS_GLOBAL_HOOK__',
+    '__VUE_DEVTOOLS_GLOBAL_HOOK__',
+    '__REDUX_DEVTOOLS_EXTENSION__',
+    '__FLIPPER__','__INSPECTOR__',
+    'chobitsu', // Chrome DevTools protocol
+    '__playwright_target__', // Playwright
+    '__webdriver_script_fn__', // Selenium WebDriver
+    'callPhantom','_phantom','__nightmare'
+  ];
+  tools.forEach(function(t){
+    if(typeof W[t] !== 'undefined'){ showWarn(); }
+  });
+},500);
+
+// ══════════════════════════════════════════════
+// 12. WEBDRIVER / AUTOMATION DETECT
+// ══════════════════════════════════════════════
+setInterval(function(){
+  if(
+    navigator.webdriver ||
+    W.callPhantom ||
+    W._phantom ||
+    W.__nightmare ||
+    D.__webdriver_evaluate ||
+    D.__selenium_evaluate ||
+    D.__webdriver_script_function ||
+    D.__fxdriver_evaluate ||
+    D.__driver_evaluate
+  ){
+    showWarn();
+  }
+},1000);
+
+// ══════════════════════════════════════════════
+// 13. MOBILE: LONG PRESS / CALLOUT BLOCK
+// ══════════════════════════════════════════════
+D.addEventListener('touchstart', function(e){
+  if(e.touches.length > 1){ e.preventDefault(); }
+},{ passive: false, capture: true });
+
+// Long press → right click on mobile
+var _lt;
+D.addEventListener('touchstart', function(e){
+  _lt = setTimeout(function(){ e.preventDefault && e.preventDefault(); }, 400);
+},{ passive: false });
+D.addEventListener('touchend',  function(){ clearTimeout(_lt); },{ passive: true });
+D.addEventListener('touchmove', function(){ clearTimeout(_lt); },{ passive: true });
+D.addEventListener('touchcancel',function(){ clearTimeout(_lt); },{ passive: true });
+
+// iOS Force Touch
+D.addEventListener('touchforcechange',function(e){
+  e.preventDefault();
+},{ passive: false });
+
+// ══════════════════════════════════════════════
+// 14. MOBILE ZOOM BLOCK (pinch/double-tap)
+// ══════════════════════════════════════════════
+D.addEventListener('gesturestart', function(e){ e.preventDefault(); },{ passive: false });
+D.addEventListener('gesturechange',function(e){ e.preventDefault(); },{ passive: false });
+D.addEventListener('gestureend',   function(e){ e.preventDefault(); },{ passive: false });
+
+var _lt2 = 0;
+D.addEventListener('touchend', function(e){
+  var now = Date.now();
+  if(now - _lt2 < 350){ e.preventDefault(); }
+  _lt2 = now;
+},{ passive: false });
+
+// ══════════════════════════════════════════════
+// 15. MUTATION OBSERVER — BLOCK INJECTED CODE
+// ══════════════════════════════════════════════
+if(W.MutationObserver){
+  new MutationObserver(function(muts){
+    muts.forEach(function(m){
+      m.addedNodes.forEach(function(n){
+        if(n.nodeName === 'SCRIPT' || n.nodeName === 'IFRAME' || n.nodeName === 'OBJECT'){
+          try{ n.parentNode && n.parentNode.removeChild(n); }catch(e){}
+          showWarn();
+        }
+      });
+    });
+  }).observe(D.documentElement,{ childList: true, subtree: true });
+}
+
+// ══════════════════════════════════════════════
+// 16. OVERRIDE eval, Function (console inject)
+// ══════════════════════════════════════════════
+try{
+  W.eval = function(){ showWarn(); return false; };
+}catch(e){}
+
+try{
+  W.Function = function(){ return function(){}; };
+}catch(e){}
+
+// Block string-based setTimeout (eval alternative)
+var _ost = W.setTimeout, _osi = W.setInterval;
+W.setTimeout = function(fn, d){
+  if(typeof fn === 'string'){ showWarn(); return; }
+  return _ost(fn, d);
+};
+W.setInterval = function(fn, d){
+  if(typeof fn === 'string'){ showWarn(); return; }
+  return _osi(fn, d);
+};
+
+// ══════════════════════════════════════════════
+// 17. IFRAME / CLICKJACKING BLOCK
+// ══════════════════════════════════════════════
+try{
+  if(W.top !== W.self){
+    W.top.location.replace(W.self.location.href);
+  }
+}catch(e){
+  D.body.innerHTML = '<h2 style="color:red;text-align:center;margin-top:40vh">Embedding Not Allowed</h2>';
+}
+
+// ══════════════════════════════════════════════
+// 18. OVERRIDE DANGEROUS DOCUMENT METHODS
+// ══════════════════════════════════════════════
+D.write    = function(){ return false; };
+D.writeln  = function(){ return false; };
+W.open     = function(){ return false; };
+
+// ══════════════════════════════════════════════
+// 19. FIREBUG / OLD DEVTOOLS CHECK
+// ══════════════════════════════════════════════
+if(W.console && (W.console.firebug ||
+  (W.console.exception && W.console.table) ||
+  (typeof W.console.profiles !== 'undefined'))){
+  showWarn();
+}
+
+// ══════════════════════════════════════════════
+// 20. CONTINUOUS CSS GUARD
+//     Re-enforce every second (in case overridden)
+// ══════════════════════════════════════════════
+setInterval(function(){
+  var s = D.body.style;
+  s.userSelect       = 'none';
+  s.webkitUserSelect = 'none';
+  s.MozUserSelect    = 'none';
+  s.msUserSelect     = 'none';
+  s.webkitTouchCallout = 'none';
+  s.khtmlUserSelect  = 'none';
+},1000);
+
+// ══════════════════════════════════════════════
+// 21. DEVTOOLS OPEN ON PAGE LOAD CHECK
+// ══════════════════════════════════════════════
+(function(){
+  var t = +new Date();
+  debugger;
+  if((+new Date() - t) > 80){ showWarn(); }
+})();
+
+})(window, document);
+</script>
+
+<?php ob_end_flush(); ?>
+</body>
+</html>
