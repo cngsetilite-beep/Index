@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bag - Apple</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',Arial,sans-serif;background:#fff;color:#1d1d1f;font-size:17px;}
+  a{color:#0071e3;text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  /* ===== NAV ===== */
+  nav.global-nav{background:rgba(255,255,255,0.85);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(0,0,0,0.1);position:sticky;top:0;z-index:100;height:44px;}
+  .nav-inner{max-width:1024px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 22px;}
+  .nav-logo svg{width:18px;height:22px;fill:#1d1d1f;display:block;}
+  .nav-links{display:flex;gap:0;list-style:none;}
+  .nav-links li a{font-size:12px;color:#1d1d1f;padding:0 10px;line-height:44px;display:block;white-space:nowrap;opacity:.88;}
+  .nav-links li a:hover{opacity:1;text-decoration:none;}
+  .nav-actions{display:flex;align-items:center;gap:16px;}
+  .nav-actions svg{width:18px;height:18px;fill:#1d1d1f;cursor:pointer;}
+  @media(max-width:768px){
+    .nav-links{display:none;}
+    .nav-inner{justify-content:space-between;}
+  }
+
+  /* ===== MAIN CONTAINER ===== */
+  .bag-page{max-width:1024px;margin:0 auto;padding:0 22px 60px;}
+
+  /* ===== HEADER ===== */
+  .bag-header{text-align:center;padding:48px 0 32px;}
+  .bag-header h1{font-size:32px;font-weight:600;letter-spacing:-.5px;color:#1d1d1f;}
+  .bag-header p{font-size:17px;color:#1d1d1f;margin-top:6px;}
+  @media(max-width:768px){
+    .bag-header h1{font-size:24px;}
+    .bag-header p{font-size:14px;}
+  }
+
+  /* ===== CHECKOUT BUTTONS ===== */
+  .checkout-row{display:flex;gap:12px;justify-content:center;padding-bottom:32px;}
+  .btn-apple-pay{background:#000;color:#fff;border:none;border-radius:8px;padding:14px 28px;font-size:17px;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit;min-width:220px;justify-content:center;flex:1;max-width:300px;}
+  .btn-apple-pay svg{width:36px;height:20px;fill:#fff;}
+  .btn-checkout{background:#0071e3;color:#fff;border:none;border-radius:8px;padding:14px 28px;font-size:17px;cursor:pointer;font-family:inherit;min-width:220px;justify-content:center;flex:1;max-width:300px;}
+  .btn-checkout:hover{background:#0077ed;}
+  @media(max-width:480px){
+    .checkout-row{flex-direction:column;align-items:stretch;}
+    .btn-apple-pay,.btn-checkout{max-width:100%;}
+  }
+
+  /* ===== DIVIDER ===== */
+  hr.divider{border:none;border-top:1px solid #d2d2d7;margin:0;}
+
+  /* ===== CART ITEM ===== */
+  .cart-item{display:grid;grid-template-columns:200px 1fr auto auto;align-items:start;padding:32px 0;gap:20px;border-bottom:1px solid #d2d2d7;}
+  .cart-item-img{width:160px;height:160px;object-fit:contain;display:block;}
+  .cart-item-info{padding-top:4px;}
+  .cart-item-info h2{font-size:19px;font-weight:400;color:#1d1d1f;margin-bottom:0;}
+  .qty-wrapper{display:flex;align-items:center;gap:4px;margin-top:2px;}
+  .qty-select{font-size:15px;color:#1d1d1f;border:none;background:transparent;cursor:pointer;-webkit-appearance:none;appearance:none;padding-right:14px;position:relative;}
+  .qty-select-wrap{position:relative;display:inline-block;}
+  .qty-select-wrap::after{content:'▾';position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none;color:#1d1d1f;}
+  .cart-item-price{font-size:19px;color:#1d1d1f;text-align:right;padding-top:4px;min-width:80px;}
+  .cart-item-actions{text-align:right;display:flex;flex-direction:column;gap:4px;padding-top:28px;}
+  .cart-item-actions a{font-size:14px;color:#0071e3;display:block;}
+
+  /* Gift card details */
+  .gift-details{margin-top:20px;padding:14px 16px;border:1px solid #d2d2d7;border-radius:6px;font-size:14px;color:#1d1d1f;background:#fff;}
+  .gift-details-header{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;margin-bottom:10px;}
+  .gift-details-header svg{width:20px;height:20px;}
+  .gift-details-header .edit-link{margin-left:auto;color:#0071e3;font-weight:400;cursor:pointer;}
+  .gift-row{margin-bottom:4px;}
+  .gift-row strong{display:block;font-weight:500;}
+  .gift-row span{color:#1d1d1f;}
+  .arrives{margin-top:16px;font-size:14px;color:#1d1d1f;}
+
+  /* Responsive cart item */
+  @media(max-width:768px){
+    .cart-item{grid-template-columns:120px 1fr;grid-template-rows:auto auto;}
+    .cart-item-img{width:100px;height:100px;}
+    .cart-item-price{grid-column:2;grid-row:1;text-align:right;padding-top:4px;}
+    .cart-item-actions{grid-column:2;grid-row:2;padding-top:0;}
+    .cart-item-info{grid-column:2;grid-row:1;}
+  }
+  @media(max-width:480px){
+    .cart-item{grid-template-columns:90px 1fr;}
+    .cart-item-img{width:80px;height:80px;}
+    .bag-header h1{font-size:22px;}
+  }
+
+  /* ===== SUMMARY ===== */
+  .summary-section{padding:24px 0;border-bottom:1px solid #d2d2d7;}
+  .summary-row{display:flex;justify-content:space-between;font-size:17px;padding:4px 0;}
+  .summary-row.total{font-weight:600;font-size:19px;padding-top:10px;}
+  .daily-cash-link{font-size:12px;color:#0071e3;display:block;text-align:right;margin-top:2px;}
+
+  /* ===== BOTTOM CHECKOUT ===== */
+  .bottom-checkout{padding:24px 0;border-bottom:1px solid #d2d2d7;}
+  .checkout-bottom-row{display:flex;gap:12px;justify-content:flex-end;}
+  @media(max-width:600px){
+    .checkout-bottom-row{flex-direction:column;}
+  }
+  .btn-apple-pay-sm{background:#000;color:#fff;border:none;border-radius:8px;padding:14px 28px;font-size:17px;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:inherit;min-width:200px;justify-content:center;}
+  .btn-apple-pay-sm svg{width:36px;height:20px;fill:#fff;}
+  .btn-checkout-sm{background:#0071e3;color:#fff;border:none;border-radius:8px;padding:14px 28px;font-size:17px;cursor:pointer;font-family:inherit;min-width:200px;text-align:center;}
+  .btn-checkout-sm:hover{background:#0077ed;}
+  @media(max-width:600px){
+    .btn-apple-pay-sm,.btn-checkout-sm{min-width:unset;width:100%;}
+  }
+
+  /* ===== YOU MAY ALSO LIKE ===== */
+  .also-like{padding:48px 0 32px;}
+  .also-like h2{font-size:24px;font-weight:600;text-align:center;margin-bottom:32px;}
+  .products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .product-card{text-align:center;}
+  .product-card img{width:100%;max-width:220px;height:180px;object-fit:contain;display:block;margin:0 auto 12px;}
+  .product-tag{font-size:12px;color:#bf4800;margin-bottom:4px;}
+  .product-name{font-size:14px;color:#1d1d1f;margin-bottom:4px;line-height:1.4;}
+  .product-price{font-size:14px;color:#1d1d1f;margin-bottom:12px;}
+  .color-swatches{display:flex;justify-content:center;gap:6px;margin-bottom:12px;}
+  .swatch{width:20px;height:20px;border-radius:50%;border:2px solid transparent;cursor:pointer;}
+  .swatch.selected{border-color:#0071e3;}
+  .color-label{font-size:12px;color:#6e6e73;margin-bottom:8px;}
+  .btn-add-bag{background:#0071e3;color:#fff;border:none;border-radius:980px;padding:10px 20px;font-size:14px;cursor:pointer;font-family:inherit;width:100%;max-width:220px;}
+  .btn-add-bag:hover{background:#0077ed;}
+  @media(max-width:600px){
+    .products-grid{grid-template-columns:1fr;gap:32px;}
+  }
+
+  /* ===== QUESTIONS ===== */
+  .questions-section{border-top:1px solid #d2d2d7;padding:0;}
+  .questions-toggle{display:flex;justify-content:space-between;align-items:center;padding:20px 0;cursor:pointer;}
+  .questions-toggle h2{font-size:17px;font-weight:400;}
+  .chevron{font-size:20px;color:#1d1d1f;transition:transform .3s;}
+  .chevron.open{transform:rotate(180deg);}
+  .questions-body{display:none;padding-bottom:20px;font-size:14px;color:#6e6e73;}
+  .questions-body.open{display:block;}
+
+  /* ===== BREADCRUMB ===== */
+  .breadcrumb{font-size:12px;color:#6e6e73;padding:16px 0 0;display:flex;gap:6px;align-items:center;}
+  .breadcrumb svg{width:6px;height:10px;fill:#6e6e73;}
+
+  /* ===== FOOTER ===== */
+  footer.site-footer{background:#f5f5f7;padding:20px 0 0;margin-top:20px;}
+  .footer-inner{max-width:1024px;margin:0 auto;padding:0 22px;}
+  .footer-top{font-size:12px;color:#6e6e73;padding:12px 0;border-bottom:1px solid #d2d2d7;}
+  .footer-cols{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;padding:20px 0;border-bottom:1px solid #d2d2d7;}
+  .footer-col h4{font-size:12px;font-weight:600;color:#1d1d1f;margin-bottom:10px;}
+  .footer-col ul{list-style:none;}
+  .footer-col ul li{margin-bottom:6px;}
+  .footer-col ul li a{font-size:12px;color:#6e6e73;}
+  .footer-col ul li a:hover{color:#1d1d1f;text-decoration:none;}
+  .footer-bottom{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;padding:12px 0;font-size:12px;color:#6e6e73;gap:8px;}
+  .footer-bottom-links{display:flex;flex-wrap:wrap;gap:8px;}
+  .footer-bottom-links a{color:#6e6e73;font-size:12px;}
+  @media(max-width:768px){
+    .footer-cols{grid-template-columns:repeat(2,1fr);}
+  }
+  @media(max-width:480px){
+    .footer-cols{grid-template-columns:1fr;}
+  }
+
+  /* ===== APPLE PAY LOGO ===== */
+  .apple-pay-logo{font-size:14px;letter-spacing:-.5px;font-weight:500;}
+</style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav class="global-nav">
+  <div class="nav-inner">
+    <a href="#" aria-label="Apple">
+      <svg viewBox="0 0 814 1000" xmlns="http://www.w3.org/2000/svg">
+        <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46.5 749.8 0 636.5 0 529.3c0-144.4 94.1-220.7 186.7-220.7 49.5 0 90.9 32.6 121.9 32.6 29.6 0 76.9-34.5 133.4-34.5 21.4 0 108.2 1.9 163.7 81.9zm-166.3-77.5c-23.5-30.1-61.8-54.1-103.2-54.1-5.8 0-11.6.6-17.4 1.9 2.6 24.9 12.9 49.5 30.1 69.5 16.8 19.4 51.8 43.4 89.4 50.4 3.2.6 5.8.6 8.4.6 1.3 0 3.2-.6 4.5-.6-2.6-27.5-12.3-54.7-11.8-67.7z"/>
+      </svg>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#">Store</a></li>
+      <li><a href="#">Mac</a></li>
+      <li><a href="#">iPad</a></li>
+      <li><a href="#">iPhone</a></li>
+      <li><a href="#">Watch</a></li>
+      <li><a href="#">Vision</a></li>
+      <li><a href="#">AirPods</a></li>
+      <li><a href="#">TV &amp; Home</a></li>
+      <li><a href="#">Entertainment</a></li>
+      <li><a href="#">Accessories</a></li>
+      <li><a href="#">Support</a></li>
+    </ul>
+    <div class="nav-actions">
+      <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path d="M13 3C7.477 3 3 7.477 3 13s4.477 10 10 10a9.96 9.96 0 0 0 6.294-2.237l4.97 4.97a1 1 0 1 0 1.414-1.414l-4.97-4.97A9.96 9.96 0 0 0 23 13c0-5.523-4.477-10-10-10zm0 2a8 8 0 1 1 0 16A8 8 0 0 1 13 5z"/></svg>
+      <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><path d="M15 2a4 4 0 0 1 4 4v1h3a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3V6a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v1h4V6a2 2 0 0 0-2-2zM8 9v15h14V9H8zm7 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="bag-page">
+
+  <!-- BAG HEADER -->
+  <div class="bag-header">
+    <h1 id="bag-total-heading">Your bag total is $0.00.</h1>
+    <p>Free delivery and free returns.</p>
+  </div>
+
+  <!-- TOP CHECKOUT BUTTONS -->
+  <div class="checkout-row">
+    <button class="btn-apple-pay">
+      <svg viewBox="0 0 165.521 105.965" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M80.352 27.205c-3.891 0-8.87-2.62-11.694-2.62-3.073 0-8.375 2.483-12.834 2.483-9.563 0-19.264-7.842-19.264-23.34 0-14.905 9.563-22.609 18.71-22.609 4.871 0 9.287 2.758 12.36 2.758 2.758 0 7.59-2.896 13.384-2.896 4.045 0 9.011 1.411 12.36 5.043-8.19 4.459-9.701 16.13-1.648 21.999-2.069 5.318-4.734 10.498-11.374 18.582zm-1.648-48.35c-2.758-5.456-7.59-9.837-13.66-9.15.137 6.067 3.21 11.8 7.59 15.5 4.321 3.616 10.084 4.734 13.522 4.185-.137-4.459-3.073-8.87-7.452-10.535z"/></svg>
+      <span class="apple-pay-logo">Pay</span>
+    </button>
+    <button class="btn-checkout">Check Out</button>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- CART ITEMS -->
+  <div id="cart-items-container"></div>
+
+  <!-- SUMMARY -->
+  <div class="summary-section">
+    <div class="summary-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+    <div class="summary-row total"><span>Total</span><span id="total">$0.00</span></div>
+    <a href="#" class="daily-cash-link">Get Daily Cash with Apple Card ⊕</a>
+  </div>
+
+  <!-- BOTTOM CHECKOUT -->
+  <div class="bottom-checkout">
+    <div class="checkout-bottom-row">
+      <button class="btn-apple-pay-sm">
+        <svg viewBox="0 0 165.521 105.965" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M80.352 27.205c-3.891 0-8.87-2.62-11.694-2.62-3.073 0-8.375 2.483-12.834 2.483-9.563 0-19.264-7.842-19.264-23.34 0-14.905 9.563-22.609 18.71-22.609 4.871 0 9.287 2.758 12.36 2.758 2.758 0 7.59-2.896 13.384-2.896 4.045 0 9.011 1.411 12.36 5.043-8.19 4.459-9.701 16.13-1.648 21.999-2.069 5.318-4.734 10.498-11.374 18.582zm-1.648-48.35c-2.758-5.456-7.59-9.837-13.66-9.15.137 6.067 3.21 11.8 7.59 15.5 4.321 3.616 10.084 4.734 13.522 4.185-.137-4.459-3.073-8.87-7.452-10.535z"/></svg>
+        <span class="apple-pay-logo">Pay</span>
+      </button>
+      <button class="btn-checkout-sm">Check Out</button>
+    </div>
+  </div>
+
+  <!-- YOU MAY ALSO LIKE -->
+  <div class="also-like">
+    <h2>You may also like</h2>
+    <div class="products-grid">
+      <div class="product-card">
+        <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/MQCE2?wid=400&hei=400&fmt=jpeg&qlt=90" alt="Beats Flex" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22180%22><rect fill=%22%23f5f5f7%22 width=%22220%22 height=%22180%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2214%22>Image</text></svg>'"/>
+        <p class="product-name">Beats Flex — All-Day Wireless Earphones — Yuzu Yellow</p>
+        <p class="product-price">$69.99</p>
+        <p class="color-label">Color - Yuzu Yellow</p>
+        <div class="color-swatches">
+          <span class="swatch" style="background:#5ac8fa;"></span>
+          <span class="swatch" style="background:#1d1d1f;"></span>
+          <span class="swatch" style="background:#c7c7cc;"></span>
+          <span class="swatch selected" style="background:#d4e04e;"></span>
+        </div>
+        <button class="btn-add-bag">Add to Bag</button>
+      </div>
+      <div class="product-card">
+        <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/MXK73?wid=400&hei=400&fmt=jpeg&qlt=90" alt="AirPods Pro 3" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22180%22><rect fill=%22%23f5f5f7%22 width=%22220%22 height=%22180%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2214%22>Image</text></svg>'"/>
+        <p class="product-tag">Free Engraving</p>
+        <p class="product-name">AirPods Pro 3</p>
+        <p class="product-price">$249.00</p>
+        <button class="btn-add-bag">Add to Bag</button>
+      </div>
+      <div class="product-card">
+        <img src="https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/MUWY3?wid=400&hei=400&fmt=jpeg&qlt=90" alt="AirPods 4 ANC" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22220%22 height=%22180%22><rect fill=%22%23f5f5f7%22 width=%22220%22 height=%22180%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2214%22>Image</text></svg>'"/>
+        <p class="product-tag">Free Engraving</p>
+        <p class="product-name">AirPods 4 with Active Noise Cancellation</p>
+        <p class="product-price">$179.00</p>
+        <button class="btn-add-bag">Add to Bag</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTIONS ABOUT BUYING -->
+  <div class="questions-section">
+    <div class="questions-toggle" onclick="toggleQ()">
+      <h2>Questions About Buying</h2>
+      <span class="chevron" id="qchevron">&#8964;</span>
+    </div>
+    <div class="questions-body" id="qbody">
+      <p>Have questions about shopping at Apple? Visit <a href="#">Shopping Help</a> or call 1-800-MY-APPLE.</p>
+    </div>
+  </div>
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb">
+    <svg viewBox="0 0 6 10" xmlns="http://www.w3.org/2000/svg"><path d="M6 5L1 0 0 1l4 4-4 4 1 1z"/></svg>
+    <a href="#">&#65279;</a>
+    <svg viewBox="0 0 6 10" xmlns="http://www.w3.org/2000/svg"><path d="M6 5L1 0 0 1l4 4-4 4 1 1z"/></svg>
+    <span>Bag</span>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      More ways to shop: <a href="#">Find an Apple Store</a> or <a href="#">other retailer</a> near you. Or call 1-800-MY-APPLE.
+    </div>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <h4>Shop and Learn</h4>
+        <ul>
+          <li><a href="#">Store</a></li>
+          <li><a href="#">Mac</a></li>
+          <li><a href="#">iPad</a></li>
+          <li><a href="#">iPhone</a></li>
+          <li><a href="#">Watch</a></li>
+          <li><a href="#">Vision</a></li>
+          <li><a href="#">AirPods</a></li>
+          <li><a href="#">TV &amp; Home</a></li>
+          <li><a href="#">AirTag</a></li>
+          <li><a href="#">Accessories</a></li>
+          <li><a href="#">Gift Cards</a></li>
+        </ul>
+        <h4 style="margin-top:16px;">Apple Wallet</h4>
+        <ul>
+          <li><a href="#">Wallet</a></li>
+          <li><a href="#">Apple Card</a></li>
+          <li><a href="#">Apple Pay</a></li>
+          <li><a href="#">Apple Cash</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Account</h4>
+        <ul>
+          <li><a href="#">Manage Your Apple Account</a></li>
+          <li><a href="#">Apple Store Account</a></li>
+          <li><a href="#">iCloud.com</a></li>
+        </ul>
+        <h4 style="margin-top:16px;">Entertainment</h4>
+        <ul>
+          <li><a href="#">Apple One</a></li>
+          <li><a href="#">Apple TV+</a></li>
+          <li><a href="#">Apple Music</a></li>
+          <li><a href="#">Apple Arcade</a></li>
+          <li><a href="#">Apple Fitness+</a></li>
+          <li><a href="#">Apple News+</a></li>
+          <li><a href="#">Apple Podcasts</a></li>
+          <li><a href="#">Apple Books</a></li>
+          <li><a href="#">App Store</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Apple Store</h4>
+        <ul>
+          <li><a href="#">Find a Store</a></li>
+          <li><a href="#">Genius Bar</a></li>
+          <li><a href="#">Today at Apple</a></li>
+          <li><a href="#">Apple Camp</a></li>
+          <li><a href="#">Apple Store App</a></li>
+          <li><a href="#">Certified Refurbished</a></li>
+          <li><a href="#">Apple Trade In</a></li>
+          <li><a href="#">Financing</a></li>
+          <li><a href="#">Carrier Deals at Apple</a></li>
+          <li><a href="#">Order Status</a></li>
+          <li><a href="#">Shopping Help</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>For Business</h4>
+        <ul>
+          <li><a href="#">Apple and Business</a></li>
+          <li><a href="#">Shop for Business</a></li>
+        </ul>
+        <h4 style="margin-top:16px;">For Education</h4>
+        <ul>
+          <li><a href="#">Apple and Education</a></li>
+          <li><a href="#">Shop for K-12</a></li>
+          <li><a href="#">Shop for College</a></li>
+        </ul>
+        <h4 style="margin-top:16px;">For Healthcare</h4>
+        <ul>
+          <li><a href="#">Apple in Healthcare</a></li>
+          <li><a href="#">Health on Apple Watch</a></li>
+          <li><a href="#">Health Records on iPhone</a></li>
+        </ul>
+        <h4 style="margin-top:16px;">For Government</h4>
+        <ul>
+          <li><a href="#">Shop for Government</a></li>
+          <li><a href="#">Shop for Veterans and Military</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Apple Values</h4>
+        <ul>
+          <li><a href="#">Accessibility</a></li>
+          <li><a href="#">Education</a></li>
+          <li><a href="#">Environment</a></li>
+          <li><a href="#">Inclusion and Diversity</a></li>
+          <li><a href="#">Privacy</a></li>
+          <li><a href="#">Racial Equity and Justice</a></li>
+          <li><a href="#">Supply Chain</a></li>
+        </ul>
+        <h4 style="margin-top:16px;">About Apple</h4>
+        <ul>
+          <li><a href="#">Newsroom</a></li>
+          <li><a href="#">Apple Leadership</a></li>
+          <li><a href="#">Career Opportunities</a></li>
+          <li><a href="#">Investors</a></li>
+          <li><a href="#">Ethics &amp; Compliance</a></li>
+          <li><a href="#">Events</a></li>
+          <li><a href="#">Contact Apple</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>Copyright &copy; 2026 Apple Inc. All rights reserved.</span>
+      <div class="footer-bottom-links">
+        <a href="#">Privacy Policy</a>
+        <span>|</span>
+        <a href="#">Terms of Use</a>
+        <span>|</span>
+        <a href="#">Sales and Refunds</a>
+        <span>|</span>
+        <a href="#">Legal</a>
+        <span>|</span>
+        <a href="#">Site Map</a>
+      </div>
+      <span>United States</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// =============================================
+// URL PARAMETER PARSING & PAGE POPULATION
+// =============================================
+// Supported URL parameters:
+//   item1: to1_name, to1_email, from1_name, from1_email, msg1, qty1, price1
+//   item2: to2_name, to2_email, from2_name, from2_email, msg2, qty2, price2
+//   (up to 5 items: replace 1/2 with 3/4/5)
+//
+// Example URL:
+// apple-bag.html?to1_name=hamad&to1_email=hamad12@hotmail.com&from1_name=hamada&from1_email=hamad12@hotmail.com&msg1=best+gift+vocher&qty1=1&price1=50&to2_name=hamad&to2_email=hamads@hotmail.com&from2_name=hadamd&from2_email=haamad@hotmail.com&msg2=best+gift+hamada&qty2=1&price2=50
+// =============================================
+
+const params = new URLSearchParams(window.location.search);
+
+function p(key, def = '') {
+  return params.get(key) || def;
+}
+
+function formatPrice(val) {
+  const n = parseFloat(val);
+  if (isNaN(n)) return '$0.00';
+  return '$' + n.toFixed(2);
+}
+
+// Apple gift card SVG image (colorful apple logo)
+const giftCardImg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 160'%3E%3Crect width='160' height='160' fill='%23f5f5f7'/%3E%3Cg transform='translate(30,10)'%3E%3Cpolygon points='50,10 70,30 50,50 30,30' fill='%23ff3b30'/%3E%3Cpolygon points='70,30 90,10 90,50 70,50' fill='%23ff9500'/%3E%3Cpolygon points='30,30 50,50 30,70 10,50' fill='%2334c759'/%3E%3Cpolygon points='50,50 70,50 70,90 50,70' fill='%230071e3'/%3E%3Cpolygon points='30,70 50,70 50,110 30,90' fill='%235856d6'/%3E%3Cpolygon points='70,50 90,50 90,90 70,70' fill='%23ffcc00'/%3E%3Cpolygon points='50,70 70,70 70,110 50,90' fill='%2300c7be'/%3E%3Cpolygon points='10,50 30,70 10,90 -10,70' fill='%23ff2d55'/%3E%3Cpolygon points='90,10 100,30 80,30' fill='%23bf5af2'/%3E%3C/g%3E%3C/svg%3E`;
+
+// Larger, better Apple multicolor logo as base64-ish inline
+const appleLogoSVG = `
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="160" height="160">
+  <rect width="200" height="200" fill="#f5f5f7"/>
+  <g transform="translate(100,100)">
+    <polygon points="0,-60 35,-20 0,20 -35,-20" fill="#FF6B6B"/>
+    <polygon points="35,-20 70,-60 70,20 35,20" fill="#FFA500"/>
+    <polygon points="-35,-20 0,20 -35,60 -70,20" fill="#4CAF50"/>
+    <polygon points="0,20 35,20 35,60 0,60" fill="#2196F3"/>
+    <polygon points="-35,20 0,20 0,60 -35,60" fill="#9C27B0"/>
+    <polygon points="35,20 70,20 70,60 35,60" fill="#FFEB3B"/>
+    <polygon points="0,60 35,60 0,80" fill="#00BCD4"/>
+    <polygon points="0,-80 35,-60 0,-60 -35,-60" fill="#E91E63"/>
+  </g>
+</svg>`;
+
+// Build cart items from URL params
+const container = document.getElementById('cart-items-container');
+let grandTotal = 0;
+let hasItems = false;
+
+for (let i = 1; i <= 5; i++) {
+  const toName    = p(`to${i}_name`);
+  const toEmail   = p(`to${i}_email`);
+  const fromName  = p(`from${i}_name`);
+  const fromEmail = p(`from${i}_email`);
+  const msg       = p(`msg${i}`);
+  const qty       = p(`qty${i}`, '1');
+  const price     = p(`price${i}`, '0');
+
+  // Stop if no recipient name and this isn't item1 with defaults
+  if (!toName && !toEmail && !fromName && !fromEmail && !msg && i > 1) continue;
+  if (!toName && !toEmail && !fromName && !fromEmail && !msg && price === '0') continue;
+
+  hasItems = true;
+  const priceNum = parseFloat(price) || 0;
+  const qtyNum   = parseInt(qty) || 1;
+  const itemTotal = priceNum * qtyNum;
+  grandTotal += itemTotal;
+
+  // Build quantity options
+  let qtyOpts = '';
+  for (let q = 1; q <= 10; q++) {
+    qtyOpts += `<option value="${q}" ${q === qtyNum ? 'selected' : ''}>${q}</option>`;
+  }
+
+  const itemHTML = `
+  <div class="cart-item">
+    <div>
+      <img class="cart-item-img" src="${giftCardImg}" alt="Apple Gift Card"/>
+    </div>
+    <div class="cart-item-info">
+      <h2>Apple Gift Card by Email</h2>
+      <div class="gift-details">
+        <div class="gift-details-header">
+          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="4" width="18" height="14" rx="2" stroke="#1d1d1f" stroke-width="1.5"/>
+            <path d="M1 8h18" stroke="#1d1d1f" stroke-width="1.5"/>
+            <path d="M10 4V2" stroke="#1d1d1f" stroke-width="1.5"/>
+          </svg>
+          Your gift card details &nbsp;<span style="color:#0071e3;cursor:pointer;">| Edit ⊕</span>
+        </div>
+        ${toName || toEmail ? `<div class="gift-row"><strong>To:</strong><span>${toName}${toEmail ? ' (' + toEmail + ')' : ''}</span></div>` : ''}
+        ${fromName || fromEmail ? `<div class="gift-row"><strong>From:</strong><span>${fromName}${fromEmail ? ' (' + fromEmail + ')' : ''}</span></div>` : ''}
+        ${msg ? `<div class="gift-row"><strong>Message:</strong><span>${msg}</span></div>` : ''}
+      </div>
+      <div class="arrives">Usually arrives within 1 hour</div>
+    </div>
+    <div class="qty-select-wrap" style="padding-top:4px;">
+      <select class="qty-select" onchange="updateQty(this, ${i})">
+        ${qtyOpts}
+      </select>
+      <span style="font-size:13px;color:#1d1d1f;">&#8964;</span>
+    </div>
+    <div>
+      <div class="cart-item-price" id="item-price-${i}">${formatPrice(itemTotal)}</div>
+      <div class="cart-item-actions">
+        <a href="#">Remove</a>
+        <a href="#">Save for later</a>
+      </div>
+    </div>
+  </div>`;
+  container.insertAdjacentHTML('beforeend', itemHTML);
+}
+
+// Default demo items if no URL params
+if (!hasItems) {
+  const defaults = [
+    { toName:'hamad', toEmail:'hamad12@hotmail.com', fromName:'hamada', fromEmail:'hamad12@hotmail.com', msg:'best gift vocher', qty:1, price:50 },
+    { toName:'hamad', toEmail:'hamads@hotmail.com',  fromName:'hadamd', fromEmail:'haamad@hotmail.com',  msg:'best gift hamada', qty:1, price:50 },
+  ];
+  defaults.forEach((d, idx) => {
+    const i = idx + 1;
+    grandTotal += d.price * d.qty;
+    let qtyOpts = '';
+    for (let q = 1; q <= 10; q++) qtyOpts += `<option ${q===d.qty?'selected':''}>${q}</option>`;
+    container.insertAdjacentHTML('beforeend', `
+    <div class="cart-item">
+      <div><img class="cart-item-img" src="${giftCardImg}" alt="Apple Gift Card"/></div>
+      <div class="cart-item-info">
+        <h2>Apple Gift Card by Email</h2>
+        <div class="gift-details">
+          <div class="gift-details-header">
+            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="1" y="4" width="18" height="14" rx="2" stroke="#1d1d1f" stroke-width="1.5"/>
+              <path d="M1 8h18" stroke="#1d1d1f" stroke-width="1.5"/>
+            </svg>
+            Your gift card details &nbsp;<span style="color:#0071e3;cursor:pointer;">| Edit ⊕</span>
+          </div>
+          <div class="gift-row"><strong>To:</strong><span>${d.toName} (${d.toEmail})</span></div>
+          <div class="gift-row"><strong>From:</strong><span>${d.fromName} (${d.fromEmail})</span></div>
+          <div class="gift-row"><strong>Message:</strong><span>${d.msg}</span></div>
+        </div>
+        <div class="arrives">Usually arrives within 1 hour</div>
+      </div>
+      <div class="qty-select-wrap" style="padding-top:4px;">
+        <select class="qty-select" onchange="updateQty(this, ${i})">
+          ${qtyOpts}
+        </select>
+        <span style="font-size:13px;color:#1d1d1f;">&#8964;</span>
+      </div>
+      <div>
+        <div class="cart-item-price" id="item-price-${i}">$${(d.price*d.qty).toFixed(2)}</div>
+        <div class="cart-item-actions"><a href="#">Remove</a><a href="#">Save for later</a></div>
+      </div>
+    </div>`);
+  });
+}
+
+// Update totals
+function updateTotals() {
+  document.getElementById('subtotal').textContent = formatPrice(grandTotal);
+  document.getElementById('total').textContent = formatPrice(grandTotal);
+  document.getElementById('bag-total-heading').textContent = `Your bag total is ${formatPrice(grandTotal)}.`;
+}
+updateTotals();
+
+// Handle quantity change
+const itemPrices = {};
+// Store base unit prices per item
+for (let i = 1; i <= 5; i++) {
+  const price = parseFloat(p(`price${i}`, '0')) || 0;
+  itemPrices[i] = price;
+}
+// For defaults
+if (!hasItems) { itemPrices[1] = 50; itemPrices[2] = 50; }
+
+function updateQty(sel, idx) {
+  const qty = parseInt(sel.value);
+  const basePrice = itemPrices[idx] || 0;
+  const newTotal = basePrice * qty;
+  const el = document.getElementById(`item-price-${idx}`);
+  if (el) el.textContent = formatPrice(newTotal);
+  // Recalculate grand total
+  let newGrand = 0;
+  document.querySelectorAll('.cart-item-price').forEach(el => {
+    newGrand += parseFloat(el.textContent.replace('$','')) || 0;
+  });
+  grandTotal = newGrand;
+  updateTotals();
+}
+
+// Questions toggle
+function toggleQ() {
+  const body = document.getElementById('qbody');
+  const chev = document.getElementById('qchevron');
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+</script>
+</body>
+</html>
