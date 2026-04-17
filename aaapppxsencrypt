@@ -1,0 +1,989 @@
+<?php
+/**
+ * Apple Shopping Bag Page
+ * URL: ?data=<SecureAdvCrypt::encrypt(json_encode(['items'=>[...]])>
+ *
+ * Item JSON fields:
+ *   to_name, to_email, from_name, from_email, message,
+ *   price (float), qty (int), design ("abstract"|"poly")
+ */
+
+// ════════════════════════════════════════
+//  SECURITY HEADERS
+// ════════════════════════════════════════
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: no-referrer');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+
+// ════════════════════════════════════════
+//  ENCRYPTION CLASS
+// ════════════════════════════════════════
+class SecureAdvCrypt {
+    private const METHOD = 'aes-256-ctr';
+    private const FIXED_PASSWORD = 'ps6HjK9+vR2L5mN7qWz1Yx8TcA4PbG3fE6iU0oV9ZkM=';
+
+    public static function encrypt(string $data): string {
+        $masterKey  = hash('sha512', self::FIXED_PASSWORD, true);
+        $encKey     = substr($masterKey, 0, 32);
+        $authKey    = substr($masterKey, 32);
+        $iv         = random_bytes(openssl_cipher_iv_length(self::METHOD));
+        $ciphertext = openssl_encrypt($data, self::METHOD, $encKey, OPENSSL_RAW_DATA, $iv);
+        $hmac       = hash_hmac('sha256', $iv . $ciphertext, $authKey, true);
+        return base64_encode($iv . $hmac . $ciphertext);
+    }
+
+    public static function decrypt(string $encodedData): ?string {
+        $masterKey  = hash('sha512', self::FIXED_PASSWORD, true);
+        $encKey     = substr($masterKey, 0, 32);
+        $authKey    = substr($masterKey, 32);
+        $decoded    = base64_decode($encodedData, true);
+        if (!$decoded) return null;
+        $ivLen      = openssl_cipher_iv_length(self::METHOD);
+        $iv         = substr($decoded, 0, $ivLen);
+        $hmac       = substr($decoded, $ivLen, 32);
+        $ciphertext = substr($decoded, $ivLen + 32);
+        $calcHmac   = hash_hmac('sha256', $iv . $ciphertext, $authKey, true);
+        if (!hash_equals($hmac, $calcHmac)) return null;
+        return openssl_decrypt($ciphertext, self::METHOD, $encKey, OPENSSL_RAW_DATA, $iv);
+    }
+}
+
+// ════════════════════════════════════════
+//  DEFAULT DEMO DATA  (matches PDF)
+// ════════════════════════════════════════
+$defaultItems = [
+    ['to_name'=>'haamd',  'to_email'=>'hamad123@gmail.com',
+     'from_name'=>'hamad','from_email'=>'hamad123@gmail.com',
+     'message'=>'Hello This is gift','price'=>25,'qty'=>1,'design'=>'abstract'],
+    ['to_name'=>'hamad',  'to_email'=>'hamad12@hotmail.com',
+     'from_name'=>'hamada','from_email'=>'hamad12@hotmail.com',
+     'message'=>'best gift vocher','price'=>50,'qty'=>1,'design'=>'poly'],
+    ['to_name'=>'hamad',  'to_email'=>'hamads@hotmail.com',
+     'from_name'=>'hademd','from_email'=>'haamed@hotmail.com',
+     'message'=>'best gift hamada','price'=>50,'qty'=>1,'design'=>'abstract'],
+];
+
+// ════════════════════════════════════════
+//  LOAD AND DECRYPT URL PARAMETER
+// ════════════════════════════════════════
+$items  = [];
+$isDemo = false;
+
+if (!empty($_GET['data'])) {
+    $decrypted = SecureAdvCrypt::decrypt(urldecode($_GET['data']));
+    if ($decrypted !== null) {
+        $parsed = json_decode($decrypted, true);
+        if (is_array($parsed) && !empty($parsed['items'])) {
+            $items = $parsed['items'];
+        }
+    }
+}
+if (empty($items)) { $items = $defaultItems; $isDemo = true; }
+
+// Calculate totals
+$cartTotal = 0; $itemCount = 0;
+foreach ($items as $it) {
+    $cartTotal += floatval($it['price']) * intval($it['qty']);
+    $itemCount += intval($it['qty']);
+}
+
+// Utility helpers
+function fp(float $n): string { return '$' . number_format($n, 2); }
+function xe(string $s): string { return htmlspecialchars($s, ENT_QUOTES, 'UTF-8'); }
+
+// Demo encrypted URL
+$demoUrl = '?data=' . urlencode(SecureAdvCrypt::encrypt(json_encode(['items' => $defaultItems])));
+
+// ════════════════════════════════════════
+//  GIFT CARD SVGs
+// ════════════════════════════════════════
+
+// Abstract wavy glitch Apple logo (pink/orange/blue)
+function svgAbstract(int $i): string {
+    $id = 'ac' . $i;
+    return <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 370" class="gc-svg">
+  <defs>
+    <clipPath id="{$id}">
+      <path d="M160,54 C162,32 190,16 216,32
+               C243,11 268,45 283,86
+               C267,82 250,93 245,112
+               C275,125 291,163 291,205
+               C291,277 261,317 230,340
+               C207,355 185,358 160,349
+               C135,358 113,355 90,340
+               C59,317 29,277 29,205
+               C29,133 74,103 112,112
+               C107,87 101,50 122,35
+               C141,23 160,54 160,54Z"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#{$id})">
+    <rect x="0" y="0" width="320" height="370" fill="#f7b8d4"/>
+    <ellipse cx="88"  cy="168" rx="152" ry="125" fill="#ff9a3c" opacity=".92"/>
+    <ellipse cx="237" cy="285" rx="134" ry="112" fill="#6ecff6" opacity=".82"/>
+    <ellipse cx="180" cy="192" rx="112" ry="93"  fill="#e8596e" opacity=".72"/>
+    <ellipse cx="256" cy="122" rx="93"  ry="80"  fill="#ffd44a" opacity=".78"/>
+    <ellipse cx="64"  cy="272" rx="109" ry="86"  fill="#b487ee" opacity=".72"/>
+    <ellipse cx="208" cy="336" rx="93"  ry="74"  fill="#f070a4" opacity=".78"/>
+    <ellipse cx="128" cy="80"  rx="80"  ry="61"  fill="#ff6b6b" opacity=".62"/>
+    <ellipse cx="264" cy="232" rx="72"  ry="67"  fill="#48dbfb" opacity=".62"/>
+    <rect x="48"  y="119" width="42" height="21" rx="1" fill="#1a1a2e" opacity=".62"/>
+    <rect x="134" y="155" width="32" height="18" rx="1" fill="#0a6fc2" opacity=".72"/>
+    <rect x="198" y="198" width="35" height="19" rx="1" fill="#4a2080" opacity=".68"/>
+    <rect x="86"  y="246" width="26" height="16" rx="1" fill="#007a5c" opacity=".72"/>
+    <rect x="166" y="278" width="32" height="16" rx="1" fill="#b52020" opacity=".68"/>
+    <rect x="61"  y="298" width="38" height="18" rx="1" fill="#0a6fc2" opacity=".58"/>
+    <rect x="198" y="106" width="29" height="16" rx="1" fill="#c05080" opacity=".68"/>
+    <rect x="237" y="230" width="35" height="19" rx="1" fill="#1a1a2e" opacity=".58"/>
+    <rect x="102" y="323" width="30" height="16" rx="1" fill="#4a2080" opacity=".68"/>
+    <rect x="150" y="134" width="26" height="14" rx="1" fill="#b04040" opacity=".72"/>
+    <rect x="29"  y="198" width="29" height="16" rx="1" fill="#007a5c" opacity=".62"/>
+    <rect x="259" y="170" width="26" height="14" rx="1" fill="#bba000" opacity=".68"/>
+    <rect x="122" y="74"  width="22" height="13" rx="1" fill="#2d3436" opacity=".58"/>
+    <rect x="237" y="141" width="26" height="13" rx="1" fill="#6c5ce7" opacity=".62"/>
+  </g>
+  <path d="M160,54 C166,29 195,13 218,30" stroke="#74d7ee" stroke-width="9" fill="none" stroke-linecap="round"/>
+</svg>
+SVG;
+}
+
+// Polygon low-poly Apple logo (colorful triangles)
+function svgPoly(int $i): string {
+    $id = 'pc' . $i;
+    return <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 370" class="gc-svg">
+  <defs>
+    <clipPath id="{$id}">
+      <path d="M160,54 C162,32 190,16 216,32
+               C243,11 268,45 283,86
+               C267,82 250,93 245,112
+               C275,125 291,163 291,205
+               C291,277 261,317 230,340
+               C207,355 185,358 160,349
+               C135,358 113,355 90,340
+               C59,317 29,277 29,205
+               C29,133 74,103 112,112
+               C107,87 101,50 122,35
+               C141,23 160,54 160,54Z"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#{$id})">
+    <polygon points="29,205 96,115 160,205"  fill="#e74c3c"/>
+    <polygon points="96,115 160,115 160,205" fill="#e67e22"/>
+    <polygon points="160,115 224,115 160,205" fill="#f1c40f"/>
+    <polygon points="224,115 291,205 160,205" fill="#2ecc71"/>
+    <polygon points="29,205 96,295 160,205"  fill="#9b59b6"/>
+    <polygon points="96,295 160,330 160,205" fill="#3498db"/>
+    <polygon points="160,330 224,295 160,205" fill="#1abc9c"/>
+    <polygon points="224,295 291,205 160,205" fill="#27ae60"/>
+    <polygon points="29,128 29,205 96,115"   fill="#c0392b"/>
+    <polygon points="291,128 291,205 224,115" fill="#16a085"/>
+    <polygon points="29,128 64,64 96,115"    fill="#8e44ad"/>
+    <polygon points="291,128 256,64 224,115" fill="#2980b9"/>
+    <polygon points="96,115 160,58 160,115"  fill="#d35400"/>
+    <polygon points="160,58 224,115 160,115" fill="#27ae60"/>
+    <polygon points="29,205 29,285 96,295"   fill="#8e44ad"/>
+    <polygon points="291,205 291,285 224,295" fill="#c0392b"/>
+    <polygon points="96,295 74,349 160,349"  fill="#3498db"/>
+    <polygon points="224,295 246,349 160,349" fill="#e74c3c"/>
+    <polygon points="64,64 122,35 160,58"    fill="#e74c3c"/>
+    <polygon points="256,64 198,35 160,58"   fill="#2980b9"/>
+    <polygon points="29,80 29,128 64,64"     fill="#f39c12"/>
+    <polygon points="291,80 291,128 256,64"  fill="#27ae60"/>
+  </g>
+  <path d="M160,54 C166,29 195,13 218,30" stroke="#27ae60" stroke-width="9" fill="none" stroke-linecap="round"/>
+</svg>
+SVG;
+}
+
+$year = date('Y');
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="robots" content="noindex,nofollow,noarchive,nosnippet"/>
+<meta http-equiv="Cache-Control" content="no-store,no-cache,must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<title>Bag - Apple</title>
+<style>
+/* ═══ RESET ═══ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue:#0071e3;--blue-h:#0077ed;--text:#1d1d1f;--sub:#6e6e73;
+  --border:#d2d2d7;--bg:#fff;--footer-bg:#f5f5f7;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue',Arial,sans-serif;
+  --max:980px;--rad:12px;--pill:980px;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font);color:var(--text);background:var(--bg);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
+  -webkit-touch-callout:none;
+}
+a{text-decoration:none;color:inherit}
+button{font-family:var(--font);cursor:pointer;border:none;outline:none;background:none;-webkit-tap-highlight-color:transparent}
+img{-webkit-user-drag:none;user-drag:none;pointer-events:none}
+
+/* ═══ GLOBAL NAV ═══ */
+.gnav{
+  position:sticky;top:0;z-index:9000;
+  background:rgba(255,255,255,.88);
+  backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid rgba(0,0,0,.1);
+}
+/* Desktop */
+.nd{display:none;height:44px;max-width:var(--max);margin:0 auto;padding:0 22px;align-items:center}
+.nd a{font-size:12px;color:var(--text);opacity:.85;white-space:nowrap;transition:opacity .15s;display:flex;align-items:center}
+.nd a:hover{opacity:1}
+.nd-logo{flex-shrink:0}
+.nd-links{display:flex;align-items:center;gap:19px;flex:1;justify-content:center}
+.nd-icons{display:flex;align-items:center;gap:14px;flex-shrink:0}
+/* Mobile */
+.nm{display:flex;height:48px;padding:0 4px;align-items:center;justify-content:space-between}
+.nm-l,.nm-c,.nm-r{display:flex;align-items:center}
+.ibtn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:var(--text);position:relative}
+.ibtn svg{width:18px;height:18px}
+.badge{
+  position:absolute;top:-4px;right:-7px;
+  background:var(--text);color:#fff;font-size:9px;font-weight:700;
+  min-width:14px;height:14px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;padding:0 2px;
+}
+@media(min-width:735px){.nd{display:flex}.nm{display:none}}
+
+/* ═══ WRAPPER ═══ */
+.wrap{max-width:var(--max);margin:0 auto;padding:0 22px}
+@media(max-width:734px){.wrap{padding:0 16px}}
+
+/* ═══ BAG HEADER ═══ */
+.bag-hdr{text-align:center;padding:48px 0 32px}
+@media(max-width:734px){.bag-hdr{padding:30px 0 24px}}
+.bag-h1{font-size:32px;font-weight:700;letter-spacing:-.5px;line-height:1.1}
+@media(max-width:734px){.bag-h1{font-size:27px}}
+.bag-sub{font-size:17px;color:var(--sub);margin-top:10px}
+@media(max-width:734px){.bag-sub{font-size:15px}}
+
+/* ── Checkout buttons ── */
+.ck-btns{display:flex;gap:12px;justify-content:center;margin-top:24px}
+@media(max-width:734px){.ck-btns{flex-direction:column;gap:0}}
+.btn-pay{
+  background:#000;color:#fff;border-radius:var(--rad);
+  padding:13px 26px;font-size:17px;font-weight:500;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  min-width:200px;transition:background .15s;
+}
+.btn-pay:hover{background:#2a2a2a}
+.btn-ck{
+  background:var(--blue);color:#fff;border-radius:var(--pill);
+  padding:13px 26px;font-size:17px;font-weight:500;
+  min-width:200px;transition:background .15s;
+}
+.btn-ck:hover{background:var(--blue-h)}
+@media(max-width:734px){
+  .btn-pay{display:none}
+  .btn-ck{width:100%;padding:18px;font-size:18px;border-radius:14px}
+}
+
+/* ═══ HORIZONTAL RULE ═══ */
+.hr{height:1px;background:var(--border)}
+
+/* ═══ ITEM BLOCK ═══ */
+/* Desktop: side by side */
+.item-block{border-bottom:1px solid var(--border)}
+.item-inner{display:flex;gap:24px;padding:28px 0}
+.item-img{flex-shrink:0;width:175px}
+.item-body{flex:1;min-width:0}
+
+/* Mobile: image centered on top, text below */
+@media(max-width:734px){
+  .item-inner{flex-direction:column;gap:0;padding:0}
+  .item-img{
+    width:100%;display:flex;justify-content:center;
+    padding:28px 0 12px;
+  }
+  .item-body{padding:0 0 28px}
+}
+
+/* SVG card */
+.gc-svg{display:block;width:100%;height:auto}
+@media(max-width:734px){.gc-svg{width:260px}}
+
+/* Item name */
+.item-name{font-size:19px;font-weight:600;line-height:1.2;margin-bottom:9px}
+@media(max-width:734px){.item-name{font-size:21px;font-weight:700;margin-bottom:8px}}
+
+/* Qty + Price row */
+.item-qp{display:flex;align-items:center;margin-bottom:4px}
+.qty-lbl{
+  display:inline-flex;align-items:center;font-size:16px;cursor:default;
+}
+/* Custom dropdown arrow (like screenshots) */
+.qty-arr{
+  display:inline-block;margin-left:4px;
+  width:0;height:0;
+  border-left:5px solid transparent;
+  border-right:5px solid transparent;
+  border-top:6px solid #1d1d1f;
+  position:relative;top:1px;
+}
+.item-price{margin-left:auto;font-size:19px;font-weight:600}
+@media(max-width:734px){.item-price{font-size:21px;font-weight:600}}
+
+/* Actions — right aligned, stacked */
+.item-acts{display:flex;flex-direction:column;align-items:flex-end;gap:0;margin-top:2px}
+.act-a{font-size:14px;color:var(--blue);text-decoration:underline;cursor:pointer;line-height:1.95}
+.act-a:hover{color:var(--blue-h)}
+
+/* ─── Gift card details ─── */
+.gcd{margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.gcd-hd{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+/* Apple icon box with border */
+.aib{
+  width:24px;height:24px;
+  border:1.5px solid #1d1d1f;border-radius:5px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.aib svg{width:13px;height:16px;fill:#1d1d1f}
+.gcd-lbl{font-size:14px;font-weight:600;color:var(--text)}
+.gcd-pipe{font-size:14px;color:var(--sub);margin:0 1px}
+/* Edit link */
+.gcd-edit{display:inline-flex;align-items:center;gap:3px;font-size:14px;color:var(--blue);cursor:pointer}
+.gcd-edit-ic{
+  width:16px;height:16px;
+  border:1.5px solid var(--blue);border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.gcd-edit-ic svg{width:9px;height:9px;stroke:var(--blue);fill:none;stroke-width:1.8;stroke-linecap:round}
+/* Details rows */
+.gcd-row{font-size:14px;line-height:1.55;margin-bottom:8px;color:var(--text)}
+.gcd-row:last-child{margin-bottom:0}
+.gcd-row b{font-weight:600;display:block}
+@media(max-width:734px){.gcd-row{font-size:15px}}
+
+/* Delivery note */
+.dlv{font-size:17px;font-weight:600;margin-top:18px;color:var(--text)}
+@media(max-width:734px){.dlv{font-size:18px;font-weight:700;padding-top:2px;padding-bottom:4px}}
+
+/* ═══ TOTALS ═══ */
+.totals{padding:8px 0 4px}
+.tot-row{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 0}
+.tot-sub{border-bottom:1px solid var(--border);font-size:17px}
+.tot-grand{font-size:19px;font-weight:700}
+@media(max-width:734px){.tot-sub{font-size:16px}.tot-grand{font-size:20px}}
+.tot-r{text-align:right}
+.daily{
+  font-size:12px;color:var(--blue);margin-top:5px;
+  display:flex;align-items:center;gap:3px;justify-content:flex-end;
+}
+.daily-ic{
+  width:14px;height:14px;border:1.5px solid var(--blue);border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.daily-ic svg{width:8px;height:8px;stroke:var(--blue);fill:none;stroke-width:1.8;stroke-linecap:round}
+
+/* Bottom checkout */
+.ck-bot{padding:22px 0 6px}
+@media(max-width:734px){
+  .ck-bot .btn-pay{display:none}
+  .ck-bot .btn-ck{width:100%;padding:18px;font-size:18px;border-radius:14px}
+}
+
+/* Help */
+.help{font-size:14px;color:var(--sub);padding:16px 0 28px;line-height:1.6}
+@media(max-width:734px){.help{border-top:1px solid var(--border);padding:18px 0 22px}}
+.help a{color:var(--blue)}
+.help a:hover{text-decoration:underline}
+
+/* ═══ QUESTIONS ═══ */
+.q-wrap{border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:20px 0;margin-bottom:0}
+.q-btn{display:flex;justify-content:space-between;align-items:center;width:100%}
+.q-lbl{font-size:21px;font-weight:600;color:var(--text)}
+@media(max-width:734px){.q-lbl{font-size:19px}}
+.q-arr{width:24px;height:14px;flex-shrink:0;color:var(--sub);transition:transform .2s}
+.q-btn.open .q-arr{transform:rotate(180deg)}
+
+/* ═══ YOU MAY ALSO LIKE ═══ */
+.also{padding:52px 0 24px}
+.sec-h{font-size:28px;font-weight:700;text-align:center;margin-bottom:40px;letter-spacing:-.3px}
+@media(max-width:734px){.sec-h{font-size:24px;margin-bottom:28px}}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr)}
+@media(max-width:734px){.pgrid{grid-template-columns:1fr}}
+.pcard{text-align:center;padding:20px 14px 28px;border-right:1px solid var(--border)}
+.pcard:last-child{border-right:none}
+@media(max-width:734px){.pcard{border-right:none;border-bottom:1px solid var(--border)}.pcard:last-child{border-bottom:none}}
+.pimg{width:100%;height:200px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.pimg svg{max-width:188px;max-height:188px;width:100%;height:auto}
+@media(max-width:734px){.pimg{height:240px}.pimg svg{max-width:220px;max-height:220px}}
+.ptag{font-size:12px;color:#bf4800;font-weight:600;margin-bottom:4px}
+.pname{font-size:17px;font-weight:600;line-height:1.3;margin-bottom:5px}
+.pprice{font-size:17px;margin-bottom:6px}
+.pcolor{font-size:13px;color:var(--sub);margin-bottom:10px}
+.swatches{display:flex;gap:8px;justify-content:center;margin-bottom:18px}
+.sw{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);cursor:pointer}
+.sw.on{border-color:var(--text);box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--text)}
+.btn-add{
+  background:var(--blue);color:#fff;border-radius:var(--pill);
+  padding:12px 20px;font-size:15px;font-weight:500;
+  width:100%;max-width:260px;transition:background .15s;
+}
+.btn-add:hover{background:var(--blue-h)}
+@media(max-width:734px){.btn-add{max-width:100%;padding:14px}}
+
+/* ═══ BREADCRUMB ═══ */
+.bc{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--sub);padding:20px 0 10px}
+.bc svg{width:11px;height:16px;fill:var(--sub);flex-shrink:0}
+.bc a{color:var(--sub)}.bc a:hover{text-decoration:underline}
+.bsep{font-size:13px;padding:0 1px}
+
+/* ═══ FOOTER ═══ */
+.ft{background:var(--footer-bg);border-top:1px solid var(--border);margin-top:6px}
+.ft-in{max-width:var(--max);margin:0 auto;padding:0 22px}
+@media(max-width:734px){.ft-in{padding:0 16px}}
+.ft-mini{font-size:12px;color:var(--sub);padding:14px 0;border-bottom:1px solid var(--border);line-height:1.6}
+.ft-mini a{color:var(--blue)}
+/* Desktop cols */
+.ft-cols{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;padding:22px 0}
+@media(max-width:900px){.ft-cols{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:734px){.ft-cols{display:none}}
+.fc-title{font-size:12px;font-weight:600;color:var(--text);margin:16px 0 8px}
+.fc-title:first-child{margin-top:0}
+.fc ul{list-style:none}
+.fc ul li{margin-bottom:6px}
+.fc ul li a{font-size:12px;color:var(--sub)}
+.fc ul li a:hover{text-decoration:underline}
+/* Mobile accordion */
+.ft-mob{display:none}
+@media(max-width:734px){.ft-mob{display:block}}
+.fm-sec{border-bottom:1px solid var(--border)}
+.fm-btn{display:flex;justify-content:space-between;align-items:center;width:100%;padding:13px 0}
+.fm-btn span{font-size:14px;color:var(--text)}
+.fm-chev{width:12px;height:8px;color:var(--sub);transition:transform .2s;flex-shrink:0}
+.fm-btn.open .fm-chev{transform:rotate(180deg)}
+.fm-body{display:none;padding-bottom:10px}
+.fm-body.open{display:block}
+.fm-body ul{list-style:none}
+.fm-body ul li{margin-bottom:9px}
+.fm-body ul li a{font-size:14px;color:var(--sub)}
+/* Footer bottom bar */
+.ft-bot{border-top:1px solid var(--border);padding:14px 0}
+.fb{max-width:var(--max);margin:0 auto;padding:0 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--sub)}
+@media(max-width:734px){.fb{padding:0 16px;flex-direction:column;align-items:flex-start;gap:5px}}
+.fb-links{display:flex;gap:12px;flex-wrap:wrap}
+.fb-links a{color:var(--sub)}.fb-links a:hover{text-decoration:underline}
+
+/* ═══ DEMO NOTICE ═══ */
+.demo{background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;font-size:12px;color:#664d03;margin:14px 0;word-break:break-all;line-height:1.6}
+.demo strong{display:block;margin-bottom:4px;font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ GLOBAL NAV ══════════════ -->
+<nav class="gnav" aria-label="Global Navigation">
+  <!-- Desktop nav -->
+  <div class="nd">
+    <a href="#" class="nd-logo" aria-label="Apple">
+      <svg height="44" viewBox="0 0 14 44" width="14" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M13.0729 17.6825C13.0558 15.7209 13.9402 14.2311 15.7254 13.1593C14.7401 11.7136 13.2486 10.9227 11.2799 10.7554C9.4189 10.5923 7.3928 11.8102 6.6489 11.8102C5.8617 11.8102 4.0639 10.8068 2.6351 10.8068C-0.1252 10.8535 -3 12.9107 -3 17.0915C-3 18.3185 -2.7759 19.5867 -2.328 20.8966C-1.7254 22.6364 0.5536 27.1008 2.9378 27.0282C4.2814 26.9937 5.2237 26.1056 6.9498 26.1056C8.6281 26.1056 9.5009 27.0282 10.9985 27.0282C13.4024 26.9937 15.4591 22.9272 16.0274 21.1831C12.9637 19.7156 13.0729 17.7697 13.0729 17.6825ZM10.1593 8.8736C11.6118 7.1466 11.4745 5.5773 11.4312 5C10.1593 5.0756 8.6887 5.8707 7.8452 6.8544C6.9498 7.9032 6.4228 9.0974 6.5341 10.7338C7.9207 10.8284 9.2256 10.1076 10.1593 8.8736Z"/></svg>
+    </a>
+    <div class="nd-links">
+      <a href="#">Store</a><a href="#">Mac</a><a href="#">iPad</a>
+      <a href="#">iPhone</a><a href="#">Watch</a><a href="#">Vision</a>
+      <a href="#">AirPods</a><a href="#">TV &amp; Home</a>
+      <a href="#">Entertainment</a><a href="#">Accessories</a><a href="#">Support</a>
+    </div>
+    <div class="nd-icons">
+      <a href="#" aria-label="Search">
+        <svg height="44" viewBox="0 0 15 44" width="15" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M14.298 27.202l-3.87-3.87c.701-1.002 1.113-2.22 1.113-3.532 0-3.424-2.777-6.2-6.2-6.2-3.424 0-6.2 2.776-6.2 6.2 0 3.423 2.776 6.2 6.2 6.2 1.312 0 2.53-.412 3.532-1.113l3.87 3.87c.195.195.512.195.707 0l.848-.849c.196-.195.196-.511 0-.706zm-9.957-3.17c-2.49 0-4.5-2.01-4.5-4.5s2.01-4.5 4.5-4.5 4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5z"/></svg>
+      </a>
+      <a href="#" aria-label="Shopping Bag" style="position:relative">
+        <svg height="44" viewBox="0 0 14 44" width="14" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M11.45 16.5h-1.7c0-1.52-1.23-2.75-2.75-2.75S4.25 14.98 4.25 16.5h-1.7C1.9 16.5.5 17.9.5 19.55v6.9C.5 28.1 1.9 29.5 3.55 29.5h6.9c1.65 0 3.05-1.4 3.05-3.05v-6.9C13.5 17.9 12.1 16.5 10.45 16.5zM7 14.3c.93 0 1.7.77 1.7 1.7H5.3c0-.93.77-1.7 1.7-1.7zm5.5 12.15c0 1.1-.95 2.05-2.05 2.05h-6.9c-1.1 0-2.05-.95-2.05-2.05v-6.9c0-1.1.95-2.05 2.05-2.05h6.9c1.1 0 2.05.95 2.05 2.05v6.9z"/></svg>
+        <span class="badge"><?= $itemCount ?></span>
+      </a>
+    </div>
+  </div>
+  <!-- Mobile nav -->
+  <div class="nm">
+    <div class="nm-l">
+      <a href="#" class="ibtn" aria-label="Home">
+        <svg viewBox="0 0 21 21" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M1 10L10.5 1 20 10"/><path d="M3.5 8V20h5v-6h4v6h5V8"/></svg>
+      </a>
+    </div>
+    <div class="nm-c">
+      <a href="#" aria-label="Apple" style="display:flex;align-items:center;padding:0 8px">
+        <svg height="22" viewBox="0 0 14 18" width="14" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M13.073 10.682c-.014-1.961.884-2.943 2.671-4.015a5.436 5.436 0 00-4.27-2.303c-1.862-.178-3.888 1.037-4.632 1.037-.78 0-2.578-1.008-4.007-1.008C.075 4.44-2.8 6.507-2.8 10.684c0 1.226.222 2.494.668 3.804.594 1.74 2.873 6.2 5.258 6.128 1.343-.035 2.286-.923 4.012-.923 1.678 0 2.551.923 4.049.923 2.403-.035 4.46-4.097 5.028-5.84-3.063-1.463-2.953-3.409-2.942-4.094zm-3.914-8.808c1.452-1.727 1.315-3.297 1.272-3.874-1.272.076-2.742.87-3.587 1.855-.944 1.049-1.471 2.243-1.36 3.879 1.386.094 2.69-.626 3.675-1.86z"/></svg>
+      </a>
+    </div>
+    <div class="nm-r">
+      <a href="#" class="ibtn" aria-label="Search">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><circle cx="8.5" cy="8.5" r="7"/><path d="m14 14 4.5 4.5"/></svg>
+      </a>
+      <a href="#" class="ibtn" aria-label="Bag" style="position:relative">
+        <svg viewBox="0 0 21 22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="7" width="19" height="14" rx="2.5"/><path d="M7 7V5.5a3.5 3.5 0 017 0V7"/></svg>
+        <span class="badge"><?= $itemCount ?></span>
+      </a>
+      <a href="#" class="ibtn" aria-label="Menu">
+        <svg viewBox="0 0 20 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="1.4" rx=".7"/><rect y="6.3" width="20" height="1.4" rx=".7"/><rect y="12.6" width="20" height="1.4" rx=".7"/></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════ MAIN CONTENT ══════════════ -->
+<main>
+<div class="wrap">
+
+  <?php if ($isDemo): ?>
+  <div class="demo">
+    <strong>Demo Mode — Showing default cart data</strong>
+    To use encrypted URL, generate like this:<br>
+    <code><?= xe($demoUrl) ?></code>
+  </div>
+  <?php endif; ?>
+
+  <!-- BAG HEADER -->
+  <div class="bag-hdr">
+    <h1 class="bag-h1">Your bag total is <?= fp($cartTotal) ?>.</h1>
+    <p class="bag-sub">Free delivery and free returns.</p>
+    <div class="ck-btns">
+      <button class="btn-pay">
+        <svg height="15" viewBox="0 0 45 18" fill="white" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.67 2.23C8.1 2.9 7.17 3.44 6.26 3.38c-.12-.9.34-1.86.87-2.46.57-.67 1.56-1.18 2.37-1.21.1.87-.26 1.77-.83 2.52zm.82 1.3c-1.31-.08-2.43.75-3.06.75-.63 0-1.59-.71-2.63-.69-1.35.02-2.61.78-3.3 2-1.41 2.44-.37 6.07.99 8.07.67 1 1.47 2.1 2.52 2.06.99-.04 1.38-.65 2.58-.65s1.56.65 2.59.65c1.08-.02 1.77-.97 2.44-1.97.73-1.12 1.02-2.21 1.04-2.27-.02-.01-2-.78-2.02-3.1-.02-1.93 1.58-2.87 1.65-2.91C11.53 4 10.23 3.57 9.49 3.53z"/><text x="15.5" y="13" font-size="11" font-family="-apple-system,sans-serif" font-weight="500">Pay</text></svg>
+        Check Out with Apple Pay
+      </button>
+      <button class="btn-ck">Check Out</button>
+    </div>
+  </div>
+
+  <div class="hr"></div>
+
+  <!-- ══ ITEMS LOOP ══ -->
+  <?php foreach ($items as $idx => $it):
+    $design = (($it['design'] ?? '') === 'poly') ? 'poly' : 'abstract';
+    $svg    = ($design === 'poly') ? svgPoly($idx) : svgAbstract($idx);
+    $price  = floatval($it['price']) * intval($it['qty']);
+    $qty    = intval($it['qty']);
+  ?>
+  <div class="item-block">
+    <div class="item-inner">
+
+      <!-- GIFT CARD IMAGE -->
+      <div class="item-img"><?= $svg ?></div>
+
+      <!-- ITEM DETAILS -->
+      <div class="item-body">
+
+        <h2 class="item-name">Apple Gift Card by Email</h2>
+
+        <!-- Quantity + Price row -->
+        <div class="item-qp">
+          <span class="qty-lbl"><?= $qty ?><span class="qty-arr"></span></span>
+          <span class="item-price"><?= fp($price) ?></span>
+        </div>
+
+        <!-- Actions — right-aligned, stacked vertically -->
+        <div class="item-acts">
+          <a href="#" class="act-a">Remove</a>
+          <a href="#" class="act-a">Save for later</a>
+        </div>
+
+        <!-- Gift card details section -->
+        <div class="gcd">
+          <div class="gcd-hd">
+            <!-- Apple Pay bordered icon -->
+            <div class="aib">
+              <svg viewBox="0 0 14 18" fill="#1d1d1f" xmlns="http://www.w3.org/2000/svg"><path d="M13.073 10.682c-.014-1.961.884-2.943 2.671-4.015a5.436 5.436 0 00-4.27-2.303c-1.862-.178-3.888 1.037-4.632 1.037-.78 0-2.578-1.008-4.007-1.008C.075 4.44-2.8 6.507-2.8 10.684c0 1.226.222 2.494.668 3.804.594 1.74 2.873 6.2 5.258 6.128 1.343-.035 2.286-.923 4.012-.923 1.678 0 2.551.923 4.049.923 2.403-.035 4.46-4.097 5.028-5.84-3.063-1.463-2.953-3.409-2.942-4.094zm-3.914-8.808c1.452-1.727 1.315-3.297 1.272-3.874-1.272.076-2.742.87-3.587 1.855-.944 1.049-1.471 2.243-1.36 3.879 1.386.094 2.69-.626 3.675-1.86z"/></svg>
+            </div>
+            <span class="gcd-lbl">Your gift card details</span>
+            <span class="gcd-pipe">|</span>
+            <a href="#" class="gcd-edit">
+              Edit
+              <span class="gcd-edit-ic">
+                <svg viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg"><path d="M4.5 1v7M1 4.5h7"/></svg>
+              </span>
+            </a>
+          </div>
+
+          <div class="gcd-row"><b>To:</b><?= xe($it['to_name'] ?? '') ?> (<?= xe($it['to_email'] ?? '') ?>)</div>
+          <div class="gcd-row"><b>From:</b><?= xe($it['from_name'] ?? '') ?> (<?= xe($it['from_email'] ?? '') ?>)</div>
+          <?php if (!empty($it['message'])): ?>
+          <div class="gcd-row"><b>Message:</b><?= xe($it['message']) ?></div>
+          <?php endif; ?>
+        </div>
+
+        <!-- Divider before delivery note -->
+        <div class="hr" style="margin-top:18px"></div>
+        <p class="dlv">Usually arrives within 1 hour</p>
+
+      </div><!-- /item-body -->
+    </div><!-- /item-inner -->
+  </div><!-- /item-block -->
+  <?php endforeach; ?>
+
+  <!-- ══ TOTALS SECTION ══ -->
+  <div class="totals">
+    <div class="tot-row tot-sub">
+      <span>Subtotal</span>
+      <span><?= fp($cartTotal) ?></span>
+    </div>
+    <div class="tot-row tot-grand">
+      <span>Total</span>
+      <div class="tot-r">
+        <div><?= fp($cartTotal) ?></div>
+        <div class="daily">
+          Get Daily Cash with Apple Card
+          <span class="daily-ic"><svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><path d="M4 1v6M1 4h6"/></svg></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom checkout buttons -->
+  <div class="ck-bot">
+    <div class="ck-btns" style="margin-top:0">
+      <button class="btn-pay">
+        <svg height="15" viewBox="0 0 45 18" fill="white" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8.67 2.23C8.1 2.9 7.17 3.44 6.26 3.38c-.12-.9.34-1.86.87-2.46.57-.67 1.56-1.18 2.37-1.21.1.87-.26 1.77-.83 2.52zm.82 1.3c-1.31-.08-2.43.75-3.06.75-.63 0-1.59-.71-2.63-.69-1.35.02-2.61.78-3.3 2-1.41 2.44-.37 6.07.99 8.07.67 1 1.47 2.1 2.52 2.06.99-.04 1.38-.65 2.58-.65s1.56.65 2.59.65c1.08-.02 1.77-.97 2.44-1.97.73-1.12 1.02-2.21 1.04-2.27-.02-.01-2-.78-2.02-3.1-.02-1.93 1.58-2.87 1.65-2.91C11.53 4 10.23 3.57 9.49 3.53z"/><text x="15.5" y="13" font-size="11" font-family="-apple-system,sans-serif" font-weight="500">Pay</text></svg>
+        Check Out with Apple Pay
+      </button>
+      <button class="btn-ck">Check Out</button>
+    </div>
+  </div>
+
+  <!-- Help text -->
+  <p class="help">
+    Need some help? <a href="#">Chat now</a> or call <a href="#">1-800-MY-APPLE</a>.
+  </p>
+
+  <!-- Questions About Buying -->
+  <div class="q-wrap">
+    <button class="q-btn" id="qBtn" aria-expanded="false">
+      <span class="q-lbl">Questions About Buying</span>
+      <svg class="q-arr" viewBox="0 0 24 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1 1l11 11L23 1"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ══ YOU MAY ALSO LIKE ══ -->
+  <div class="also">
+    <h2 class="sec-h">You may also like</h2>
+    <div class="pgrid">
+
+      <!-- Beats Flex -->
+      <div class="pcard">
+        <div class="pimg">
+          <svg viewBox="0 0 220 190" xmlns="http://www.w3.org/2000/svg" aria-label="Beats Flex Beats Black">
+            <path d="M48 140 Q82 97 110 92 Q138 97 172 140" stroke="#1c1c1c" stroke-width="6" fill="none" stroke-linecap="round"/>
+            <ellipse cx="46" cy="144" rx="19" ry="19" fill="#1c1c1c"/>
+            <circle cx="46" cy="144" r="10" fill="#1c1c1c" stroke="#cc0000" stroke-width="2.5"/>
+            <ellipse cx="46" cy="157" rx="8" ry="11" fill="#2a2a2a" transform="rotate(-25 46 157)"/>
+            <ellipse cx="174" cy="144" rx="19" ry="19" fill="#1c1c1c"/>
+            <circle cx="174" cy="144" r="10" fill="#1c1c1c" stroke="#cc0000" stroke-width="2.5"/>
+            <ellipse cx="174" cy="157" rx="8" ry="11" fill="#2a2a2a" transform="rotate(25 174 157)"/>
+            <rect x="98" y="122" width="24" height="19" rx="6" fill="#1c1c1c"/>
+            <circle cx="110" cy="131" r="4" fill="#444"/>
+            <rect x="103" y="141" width="14" height="2.5" rx="1.25" fill="#333"/>
+          </svg>
+        </div>
+        <p class="pname">Beats Flex — All-Day Wireless Earphones — Beats Black</p>
+        <p class="pprice">$69.99</p>
+        <p class="pcolor">Color - Beats Black</p>
+        <div class="swatches">
+          <span class="sw" style="background:#58c8e8" title="Glacier Blue"></span>
+          <span class="sw on" style="background:#1c1c1c" title="Beats Black"></span>
+          <span class="sw" style="background:#d0d0d0" title="Smoke Gray"></span>
+          <span class="sw" style="background:#cfd438" title="Yuzu Yellow"></span>
+        </div>
+        <button class="btn-add">Add to Bag</button>
+      </div>
+
+      <!-- AirPods Pro 3 -->
+      <div class="pcard">
+        <div class="pimg">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="AirPods Pro 3">
+            <rect x="52" y="98" width="96" height="84" rx="22" fill="#f3f3f5" stroke="#d0d0d8" stroke-width="1.2"/>
+            <rect x="52" y="98" width="96" height="44" rx="22" fill="#eaeaef"/>
+            <line x1="54" y1="138" x2="146" y2="138" stroke="#c4c4cc" stroke-width="2"/>
+            <circle cx="100" cy="165" r="4.5" fill="#34c759"/>
+            <ellipse cx="78" cy="106" rx="12" ry="15" fill="#f9f9fb" stroke="#d0d0d8" stroke-width="1"/>
+            <rect x="74.5" y="82" width="8" height="24" rx="4" fill="#f9f9fb" stroke="#d0d0d8" stroke-width="1"/>
+            <ellipse cx="78" cy="112" rx="6" ry="7" fill="#dddde5"/>
+            <ellipse cx="122" cy="106" rx="12" ry="15" fill="#f9f9fb" stroke="#d0d0d8" stroke-width="1"/>
+            <rect x="117.5" y="82" width="8" height="24" rx="4" fill="#f9f9fb" stroke="#d0d0d8" stroke-width="1"/>
+            <ellipse cx="122" cy="112" rx="6" ry="7" fill="#dddde5"/>
+          </svg>
+        </div>
+        <p class="ptag">Free Engraving</p>
+        <p class="pname">AirPods Pro 3</p>
+        <p class="pprice">$249.00</p>
+        <button class="btn-add">Add to Bag</button>
+      </div>
+
+      <!-- AirPods 4 ANC -->
+      <div class="pcard">
+        <div class="pimg">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="AirPods 4 ANC">
+            <rect x="59" y="116" width="82" height="68" rx="16" fill="#f3f3f5" stroke="#d0d0d8" stroke-width="1.2"/>
+            <rect x="59" y="116" width="82" height="32" rx="16" fill="#eaeaef"/>
+            <line x1="61" y1="144" x2="139" y2="144" stroke="#c4c4cc" stroke-width="2"/>
+            <circle cx="100" cy="164" r="3.5" fill="#34c759"/>
+            <ellipse cx="81" cy="122" rx="10" ry="13" fill="#f9f9fb" stroke="#d0d0d8" stroke-width="1"/>
+            <rect x="78" y="98" width="6" height="24" rx="3" fill="#f9f9fb" stroke="#d0d0d8" stroke-width="1"/>
+            <rect x="78.5" y="108" width="5" height="3" rx="1.5" fill="#c0c0c8"/>
+            <ellipse cx="119" cy="122" rx="10" ry="13" fill="#f9f9fb" stroke="#d0d0d8" stroke-width="1"/>
+            <rect x="116" y="98" width="6" height="24" rx="3" fill="#f9f9fb" stroke="#d0d0d8" stroke-width="1"/>
+            <rect x="116.5" y="108" width="5" height="3" rx="1.5" fill="#c0c0c8"/>
+          </svg>
+        </div>
+        <p class="ptag">Free Engraving</p>
+        <p class="pname">AirPods 4 with Active Noise Cancellation</p>
+        <p class="pprice">$179.00</p>
+        <button class="btn-add">Add to Bag</button>
+      </div>
+
+    </div><!-- /pgrid -->
+  </div><!-- /also -->
+
+  <!-- Breadcrumb -->
+  <div class="bc">
+    <svg viewBox="0 0 14 18" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M13.073 10.682c-.014-1.961.884-2.943 2.671-4.015a5.436 5.436 0 00-4.27-2.303c-1.862-.178-3.888 1.037-4.632 1.037-.78 0-2.578-1.008-4.007-1.008C.075 4.44-2.8 6.507-2.8 10.684c0 1.226.222 2.494.668 3.804.594 1.74 2.873 6.2 5.258 6.128 1.343-.035 2.286-.923 4.012-.923 1.678 0 2.551.923 4.049.923 2.403-.035 4.46-4.097 5.028-5.84-3.063-1.463-2.953-3.409-2.942-4.094zm-3.914-8.808c1.452-1.727 1.315-3.297 1.272-3.874-1.272.076-2.742.87-3.587 1.855-.944 1.049-1.471 2.243-1.36 3.879 1.386.094 2.69-.626 3.675-1.86z"/></svg>
+    <span class="bsep">›</span>
+    <a href="#">Bag</a>
+  </div>
+
+</div><!-- /wrap -->
+</main>
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer class="ft">
+  <div class="ft-in">
+    <p class="ft-mini">
+      More ways to shop: <a href="#">Find an Apple Store</a> or
+      <a href="#">other retailer</a> near you. Or call <a href="#">1-800-MY-APPLE</a>.
+    </p>
+
+    <!-- Desktop columns -->
+    <div class="ft-cols">
+      <div class="fc">
+        <p class="fc-title">Shop and Learn</p>
+        <ul><li><a href="#">Store</a></li><li><a href="#">Mac</a></li><li><a href="#">iPad</a></li><li><a href="#">iPhone</a></li><li><a href="#">Watch</a></li><li><a href="#">Vision</a></li><li><a href="#">AirPods</a></li><li><a href="#">TV &amp; Home</a></li><li><a href="#">AirTag</a></li><li><a href="#">Accessories</a></li><li><a href="#">Gift Cards</a></li></ul>
+        <p class="fc-title">Apple Wallet</p>
+        <ul><li><a href="#">Wallet</a></li><li><a href="#">Apple Card</a></li><li><a href="#">Apple Pay</a></li><li><a href="#">Apple Cash</a></li></ul>
+      </div>
+      <div class="fc">
+        <p class="fc-title">Account</p>
+        <ul><li><a href="#">Manage Your Apple Account</a></li><li><a href="#">Apple Store Account</a></li><li><a href="#">iCloud.com</a></li></ul>
+        <p class="fc-title">Entertainment</p>
+        <ul><li><a href="#">Apple One</a></li><li><a href="#">Apple TV+</a></li><li><a href="#">Apple Music</a></li><li><a href="#">Apple Arcade</a></li><li><a href="#">Apple Fitness+</a></li><li><a href="#">Apple News+</a></li><li><a href="#">Apple Podcasts</a></li><li><a href="#">Apple Books</a></li><li><a href="#">App Store</a></li></ul>
+      </div>
+      <div class="fc">
+        <p class="fc-title">Apple Store</p>
+        <ul><li><a href="#">Find a Store</a></li><li><a href="#">Genius Bar</a></li><li><a href="#">Today at Apple</a></li><li><a href="#">Apple Camp</a></li><li><a href="#">Apple Store App</a></li><li><a href="#">Certified Refurbished</a></li><li><a href="#">Apple Trade In</a></li><li><a href="#">Financing</a></li><li><a href="#">Carrier Deals at Apple</a></li><li><a href="#">Order Status</a></li><li><a href="#">Shopping Help</a></li></ul>
+      </div>
+      <div class="fc">
+        <p class="fc-title">For Business</p>
+        <ul><li><a href="#">Apple and Business</a></li><li><a href="#">Shop for Business</a></li></ul>
+        <p class="fc-title">For Education</p>
+        <ul><li><a href="#">Apple and Education</a></li><li><a href="#">Shop for K-12</a></li><li><a href="#">Shop for College</a></li></ul>
+        <p class="fc-title">For Healthcare</p>
+        <ul><li><a href="#">Apple in Healthcare</a></li><li><a href="#">Health on Apple Watch</a></li><li><a href="#">Health Records on iPhone</a></li></ul>
+        <p class="fc-title">For Government</p>
+        <ul><li><a href="#">Shop for Government</a></li><li><a href="#">Shop for Veterans and Military</a></li></ul>
+      </div>
+      <div class="fc">
+        <p class="fc-title">Apple Values</p>
+        <ul><li><a href="#">Accessibility</a></li><li><a href="#">Education</a></li><li><a href="#">Environment</a></li><li><a href="#">Inclusion and Diversity</a></li><li><a href="#">Privacy</a></li><li><a href="#">Racial Equity and Justice</a></li><li><a href="#">Supply Chain</a></li></ul>
+        <p class="fc-title">About Apple</p>
+        <ul><li><a href="#">Newsroom</a></li><li><a href="#">Apple Leadership</a></li><li><a href="#">Career Opportunities</a></li><li><a href="#">Investors</a></li><li><a href="#">Ethics &amp; Compliance</a></li><li><a href="#">Events</a></li><li><a href="#">Contact Apple</a></li></ul>
+      </div>
+    </div>
+
+    <!-- Mobile accordion -->
+    <div class="ft-mob">
+      <?php
+      $fsecs=[
+        'Shop and Learn'=>['Store','Mac','iPad','iPhone','Watch','Vision','AirPods','TV & Home','AirTag','Accessories','Gift Cards'],
+        'Apple Wallet'=>['Wallet','Apple Card','Apple Pay','Apple Cash'],
+        'Account'=>['Manage Your Apple Account','Apple Store Account','iCloud.com'],
+        'Entertainment'=>['Apple One','Apple TV+','Apple Music','Apple Arcade','Apple Fitness+','Apple News+','Apple Podcasts','Apple Books','App Store'],
+        'Apple Store'=>['Find a Store','Genius Bar','Today at Apple','Apple Camp','Apple Store App','Certified Refurbished','Apple Trade In','Financing','Order Status','Shopping Help'],
+        'For Business'=>['Apple and Business','Shop for Business'],
+        'For Education'=>['Apple and Education','Shop for K-12','Shop for College'],
+        'For Healthcare'=>['Apple in Healthcare','Health on Apple Watch','Health Records on iPhone'],
+        'For Government'=>['Shop for Government','Shop for Veterans and Military'],
+        'Apple Values'=>['Accessibility','Education','Environment','Inclusion and Diversity','Privacy','Racial Equity and Justice','Supply Chain'],
+        'About Apple'=>['Newsroom','Apple Leadership','Career Opportunities','Investors','Ethics & Compliance','Events','Contact Apple'],
+      ];
+      foreach($fsecs as $t=>$ls):
+      ?>
+      <div class="fm-sec">
+        <button class="fm-btn" onclick="tfm(this)" type="button">
+          <span><?= xe($t) ?></span>
+          <svg class="fm-chev" viewBox="0 0 12 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><path d="M1 1l5 5 5-5"/></svg>
+        </button>
+        <div class="fm-body">
+          <ul><?php foreach($ls as $l):?><li><a href="#"><?= xe($l) ?></a></li><?php endforeach;?></ul>
+        </div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+
+  <div class="ft-bot">
+    <div class="fb">
+      <span>Copyright &copy; <?= $year ?> Apple Inc. All rights reserved.</span>
+      <div class="fb-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+        <a href="#">Sales and Refunds</a>
+        <a href="#">Legal</a>
+        <a href="#">Site Map</a>
+      </div>
+      <span>United States</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════
+     PRIVACY & SECURITY SHIELD
+     Blocks: right-click, F12, Ctrl+Shift+I/J/C,
+     Ctrl+U, Ctrl+S, view-source, console, devtools
+═══════════════════════════════════════════ -->
+<script>
+(function(){
+"use strict";
+
+/* Block right-click */
+document.addEventListener('contextmenu',function(e){e.preventDefault();return false;},true);
+
+/* Block keyboard shortcuts */
+document.addEventListener('keydown',function(e){
+  var k=e.key,c=e.keyCode;
+  /* F12 */
+  if(k==='F12'||c===123){e.preventDefault();e.stopPropagation();return false;}
+  /* Ctrl or Cmd combos */
+  if(e.ctrlKey||e.metaKey){
+    /* Ctrl+U view-source, Ctrl+S save, Ctrl+P print, Ctrl+A select-all */
+    if(k==='u'||k==='U'||k==='s'||k==='S'||k==='p'||k==='P'||k==='a'||k==='A'){
+      e.preventDefault();e.stopPropagation();return false;
+    }
+    /* Ctrl+Shift+I/J/C/K devtools */
+    if(e.shiftKey&&(k==='i'||k==='I'||k==='j'||k==='J'||k==='c'||k==='C'||k==='k'||k==='K')){
+      e.preventDefault();e.stopPropagation();return false;
+    }
+    /* By keyCode */
+    if(c===73||c===74||c===67||c===85||c===83||c===80||c===65){
+      e.preventDefault();e.stopPropagation();return false;
+    }
+  }
+  /* Alt+F4 / browser shortcuts */
+  if(e.altKey&&(k==='F4'||c===115)){e.preventDefault();return false;}
+},true);
+
+document.addEventListener('keyup',function(e){
+  if(e.keyCode===123){e.preventDefault();return false;}
+},true);
+
+/* Disable text selection drag */
+document.addEventListener('selectstart',function(e){e.preventDefault();return false;});
+document.addEventListener('dragstart',function(e){e.preventDefault();return false;});
+
+/* Block mouse right-button */
+document.addEventListener('mousedown',function(e){
+  if(e.button===2){e.preventDefault();return false;}
+},true);
+
+/* Disable copy / cut */
+document.addEventListener('copy',function(e){e.preventDefault();return false;});
+document.addEventListener('cut', function(e){e.preventDefault();return false;});
+
+/* ── Override all console methods ── */
+(function(){
+  var noop=function(){};
+  var methods=['log','warn','error','info','debug','dir','table','trace',
+               'group','groupCollapsed','groupEnd','time','timeEnd',
+               'profile','profileEnd','assert','count','clear'];
+  if(window.console){
+    methods.forEach(function(m){
+      try{window.console[m]=noop;}catch(x){}
+    });
+  }
+  try{
+    Object.defineProperty(window,'console',{
+      get:function(){
+        return{log:noop,warn:noop,error:noop,info:noop,debug:noop,
+               dir:noop,table:noop,trace:noop,assert:noop,count:noop,clear:noop};
+      },
+      set:function(){}
+    });
+  }catch(x){}
+})();
+
+/* ── DevTools window-size detection ── */
+(function(){
+  var blocked=false;
+  var OVERLAY='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:-apple-system,sans-serif;font-size:17px;color:#1d1d1f;text-align:center;padding:24px">Developer tools are not permitted on this page.<br>Please close them to continue.</div>';
+  function check(){
+    var wDiff=window.outerWidth -window.innerWidth;
+    var hDiff=window.outerHeight-window.innerHeight;
+    if((wDiff>150||hDiff>150)&&!blocked){
+      blocked=true;
+      document.body.insertAdjacentHTML('afterbegin',OVERLAY);
+    }
+    if(wDiff<=150&&hDiff<=150&&blocked){
+      blocked=false;
+      var o=document.getElementById('devblock');
+      if(o)o.remove();
+      /* Reload to clear any tampering */
+      location.reload();
+    }
+  }
+  setInterval(check,800);
+  window.addEventListener('resize',check);
+})();
+
+/* ── Anti-debugger trap ── */
+(function(){
+  function trap(){
+    var t=+new Date();
+    /* jshint ignore:start */
+    debugger;
+    /* jshint ignore:end */
+    if(+new Date()-t>80){
+      document.body.innerHTML='<div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:-apple-system,sans-serif;font-size:17px;color:#1d1d1f;text-align:center;padding:24px">Developer tools are not permitted on this page.</div>';
+    }
+  }
+  setInterval(trap,3500);
+})();
+
+/* ── Disable print ── */
+window.addEventListener('beforeprint',function(e){e.stopImmediatePropagation();},true);
+window.onbeforeprint=function(){return false;};
+
+/* ── Questions toggle ── */
+var qBtn=document.getElementById('qBtn');
+if(qBtn){
+  qBtn.addEventListener('click',function(){
+    var o=this.classList.toggle('open');
+    this.setAttribute('aria-expanded',o);
+  });
+}
+
+})();
+
+/* Mobile footer accordion */
+function tfm(btn){
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+</script>
+
+</body>
+</html>
