@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Pick your location</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<style>
+  :root {
+    --ink: #111418;
+    --muted: #646b78;
+    --paper: #ffffff;
+    --bg: #f4f5f7;
+    --line: #e2e5ea;
+    --accent: #0b6e4f;
+    --accent-soft: #e9f5f0;
+    --live: #1a73e8;
+    --warn: #7a5200;
+    --warn-soft: #fff5dc;
+    --error: #b42318;
+    --error-soft: #fdeceb;
+    --r: 10px;
+    font-family: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    height: 100vh; height: 100dvh; color: var(--ink); background: var(--bg);
+    display: grid;
+    grid-template-columns: 380px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "side map";
+  }
+  button, input { font: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Side panel (desktop) ---------- */
+  .side {
+    grid-area: side; position: relative; z-index: 2; min-height: 0;
+    display: flex; flex-direction: column; background: var(--paper); border-right: 1px solid var(--line);
+  }
+  .head { position: relative; z-index: 1000; padding: 22px 22px 18px; border-bottom: 1px solid var(--line); }
+  .brand { margin-bottom: 14px; }
+  .brand h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+  .brand p { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+
+  .search { position: relative; }
+  .search svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  #searchInput {
+    width: 100%; height: 46px; padding: 0 14px 0 40px; font-size: 15px; color: var(--ink);
+    background: var(--bg); border: 1px solid transparent; border-radius: var(--r); outline: none;
+  }
+  #searchInput::placeholder { color: #8a909b; }
+  #searchInput:focus { background: var(--paper); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  #suggestions {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0; display: none; max-height: 300px; overflow-y: auto;
+    background: var(--paper); border: 1px solid var(--line); border-radius: var(--r);
+    box-shadow: 0 12px 30px rgba(17, 20, 24, .14);
+  }
+  #suggestions.show { display: block; }
+  #suggestions button {
+    display: block; width: 100%; padding: 11px 14px; text-align: left; background: none; border: 0;
+    border-bottom: 1px solid var(--line); color: var(--ink); cursor: pointer;
+  }
+  #suggestions button:last-child { border-bottom: 0; }
+  #suggestions button:hover, #suggestions button:focus-visible { background: var(--accent-soft); }
+  #suggestions .name { display: block; font-size: 14px; font-weight: 600; }
+  #suggestions .sub { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+  #suggestions .empty { padding: 12px 14px; font-size: 13px; color: var(--muted); }
+
+  .panel {
+    flex: 1; min-height: 0; overflow-y: auto; padding: 18px 22px 22px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .addr { border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; }
+  .label { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .line1 { margin-top: 4px; font-size: 17px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+  .line2 { margin-top: 2px; font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+  .coords { margin-top: 10px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .flat {
+    width: 100%; height: 46px; padding: 0 14px; font-size: 15px; color: var(--ink);
+    background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); outline: none;
+  }
+  .flat:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .status { min-height: 18px; font-size: 13px; color: var(--muted); }
+  .alert { font-size: 13px; line-height: 1.4; padding: 10px 12px; border-radius: var(--r); }
+  .alert.info { background: var(--bg); color: var(--muted); }
+  .alert.warn { background: var(--warn-soft); color: var(--warn); }
+  .alert.error { background: var(--error-soft); color: var(--error); }
+  .primary {
+    height: 50px; width: 100%; font-size: 16px; font-weight: 700; color: #fff;
+    background: var(--accent); border: 0; border-radius: var(--r); cursor: pointer;
+  }
+  .primary:hover:not(:disabled) { filter: brightness(1.06); }
+  .primary:disabled { background: #c3c9d1; cursor: not-allowed; }
+  .result { padding: 14px 16px; background: var(--accent-soft); border-radius: var(--r); }
+  .result .label { color: var(--accent); }
+  .result .line1 { font-size: 16px; }
+
+  /* ---------- Map ---------- */
+  .map-wrap { grid-area: map; position: relative; min-height: 0; isolation: isolate; }
+  #map { position: absolute; inset: 0; }
+  .pin {
+    position: absolute; left: 50%; top: 50%; width: 32px; height: 42px; z-index: 500;
+    transform: translate(-50%, -100%); pointer-events: none; transition: transform .18s ease;
+  }
+  .pin.lift { transform: translate(-50%, -118%); }
+  .pin svg { display: block; width: 100%; height: 100%; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .28)); }
+  .pin::after {
+    content: ""; position: absolute; left: 50%; bottom: -4px; width: 12px; height: 5px; margin-left: -6px;
+    border-radius: 50%; background: rgba(0, 0, 0, .25); transition: transform .18s ease, opacity .18s ease;
+  }
+  .pin.lift::after { transform: scale(.6); opacity: .6; }
+
+  /* Live blue dot */
+  .live-dot { background: transparent; border: 0; }
+  .live-dot span {
+    position: relative; display: block; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--live); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+  }
+  .live-dot span::before {
+    content: ""; position: absolute; inset: -9px; border-radius: 50%;
+    background: rgba(26, 115, 232, .25); animation: pulse 2s ease-out infinite;
+  }
+  @keyframes pulse { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.3); opacity: 0; } }
+
+  .locate {
+    position: absolute; right: 14px; bottom: 14px; z-index: 600; width: 46px; height: 46px;
+    display: grid; place-items: center; border: 0; border-radius: 50%;
+    background: var(--paper); color: var(--live); cursor: pointer; box-shadow: 0 2px 10px rgba(0, 0, 0, .16);
+    transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+  .locate.paused { box-shadow: inset 0 0 0 2px var(--live), 0 2px 10px rgba(0, 0, 0, .16); }
+  .locate.on { background: var(--live); color: #fff; }
+  .locate:active { transform: scale(.94); }
+  @media (prefers-reduced-motion: reduce) {
+    .pin, .pin::after, .locate { transition: none; }
+    .live-dot span::before { animation: none; opacity: 0; }
+  }
+
+  /* ---------- Mobile: stacked (search, map, panel) ---------- */
+  @media (max-width: 760px) {
+    body {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      grid-template-areas: "head" "map" "panel";
+    }
+    .side { display: contents; }
+    .head { grid-area: head; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+    .brand { display: none; }
+    .map-wrap { grid-area: map; }
+    .panel {
+      grid-area: panel; flex: none; max-height: 56dvh;
+      padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+      background: var(--paper); border-top: 1px solid var(--line);
+    }
+  }
+</style>
+</head>
+<body>
+
+<aside class="side">
+  <header class="head">
+    <div class="brand">
+      <h1>Pick your location</h1>
+      <p>your location finding.............</p>
+    </div>
+    <div class="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" />
+      </svg>
+      <input id="searchInput" type="search" placeholder="Search any place, street or landmark" autocomplete="off" aria-label="Search location" />
+      <div id="suggestions" role="listbox"></div>
+    </div>
+  </header>
+
+  <section class="panel">
+    <div class="addr">
+      <div class="label">Selected location</div>
+      <div class="line1" id="line1">your location finding............</div>
+      <div class="line2" id="line2"></div>
+      <div class="coords" id="coords"></div>
+    </div>
+    <input class="flat" id="flat" type="text" placeholder="Flat / House no. (optional)" maxlength="80" aria-label="Flat or house number" />
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+    <div class="alert" id="alert" hidden></div>
+    <button class="primary" id="confirmBtn" type="button" disabled>Confirm location</button>
+    <div class="result" id="result" hidden>
+      <div class="label">Location confirmed</div>
+      <div class="line1" id="rLine1"></div>
+      <div class="line2" id="rLine2"></div>
+      <div class="coords" id="rCoords"></div>
+    </div>
+  </section>
+</aside>
+
+<main class="map-wrap">
+  <div id="map"></div>
+  <div class="pin" id="pin" aria-hidden="true">
+    <svg viewBox="0 0 38 48"><path d="M19 0C8.5 0 0 8.5 0 19c0 14 19 29 19 29s19-15 19-29C38 8.5 29.5 0 19 0z" fill="#0b6e4f" /><circle cx="19" cy="19" r="7" fill="#fff" /></svg>
+  </div>
+  <button class="locate" id="locateBtn" type="button" aria-pressed="false" title="Live location chalu karein">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2.5" fill="currentColor" /><path d="M12 1v3M12 20v3M1 12h3M20 12h3" />
+    </svg>
+  </button>
+</main>
+
+<script>
+(() => {
+  const WORLD = [20, 0];              // shown only until a real location is found
+  const WORLD_ZOOM = 2;
+  const FILE_TIP = 'Browser GPS block kar raha hai, kyunki ye file seedhe khuli hai. Live GPS ke liye https par host karein, ya folder me "python3 -m http.server 8000" chalakar http://localhost:8000/location-picker-v4.html kholein.';
+
+  const $ = (id) => document.getElementById(id);
+  const ui = {
+    search: $('searchInput'), suggestions: $('suggestions'), locate: $('locateBtn'), pin: $('pin'),
+    line1: $('line1'), line2: $('line2'), coords: $('coords'), flat: $('flat'),
+    status: $('status'), alert: $('alert'), confirm: $('confirmBtn'), result: $('result'),
+    rLine1: $('rLine1'), rLine2: $('rLine2'), rCoords: $('rCoords')
+  };
+
+  const state = { lat: null, lng: null, addr: null };
+  const cache = new Map();
+  let lookupId = 0, lookupCtrl = null, moveTimer = null, lastLookupPt = null;
+  let searchTimer = null, searchCtrl = null;
+
+  // Live location state
+  let watchId = null;        // null = live location off
+  let follow = false;        // map keeps centering on the live dot
+  let firstFix = false;
+  let lastAcc = null;
+  let dot = null, ring = null;
+
+  const uniq = (arr) => [...new Set(arr.filter(Boolean))];
+  const fmt = (lat, lng) => `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  const setStatus = (msg, type = '') => {
+    ui.status.textContent = msg;
+    ui.status.className = 'status' + (type ? ' ' + type : '');
+  };
+  const showAlert = (msg, type = 'info') => {
+    ui.alert.hidden = !msg;
+    ui.alert.textContent = msg || '';
+    ui.alert.className = 'alert ' + type;
+  };
+  // Distance in meters between two {lat,lng} points
+  function distM(a, b) {
+    const R = 6371000, rad = (d) => d * Math.PI / 180;
+    const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+
+  /* ---------- Map ---------- */
+  const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(WORLD, WORLD_ZOOM);
+  L.control.zoom({ position: 'topright' }).addTo(map);
+  L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  const LIVE_ICON = L.divIcon({ className: 'live-dot', html: '<span></span>', iconSize: [18, 18], iconAnchor: [9, 9] });
+
+  map.on('movestart', () => {
+    ui.pin.classList.add('lift');
+    clearTimeout(moveTimer);
+  });
+  map.on('move', () => {
+    const c = map.getCenter();
+    state.lat = c.lat;
+    state.lng = c.lng;
+    ui.coords.textContent = fmt(c.lat, c.lng);
+  });
+  map.on('moveend', () => {
+    ui.pin.classList.remove('lift');
+    clearTimeout(moveTimer);
+    // While following live GPS, skip a fresh lookup for tiny moves (under 20 m)
+    if (follow && lastLookupPt && state.addr && distM(lastLookupPt, state) < 20) {
+      ui.coords.textContent = fmt(state.lat, state.lng);
+      return;
+    }
+    cancelLookup();
+    state.addr = null;
+    ui.confirm.disabled = true;
+    ui.result.hidden = true;
+    setStatus('Address dhoondh rahe hain…');
+    moveTimer = setTimeout(lookupAddress, follow ? 1200 : 500);   // debounce keeps geocoder requests polite
+  });
+  // User dragging the map pauses follow mode (live dot keeps updating)
+  map.on('dragstart', pauseFollow);
+
+  /* ---------- Reverse geocoding (pin -> address) ---------- */
+  function formatAddress(d) {
+    const a = d.address || {};
+    const road = a.road || a.pedestrian || a.footway || a.path || '';
+    const street = uniq([a.house_number, road]).join(', ');
+    const place = d.name && d.name !== road ? d.name : '';
+    const line1 = uniq([place, street]).join(', ')
+      || uniq([a.neighbourhood, a.suburb, a.city_district]).join(', ')
+      || d.display_name;
+    const line2 = uniq([
+      a.neighbourhood || a.suburb || a.quarter || a.hamlet,
+      a.city_district,
+      a.city || a.town || a.village || a.municipality,
+      a.state,
+      a.country
+    ]).join(', ');
+    return { line1, line2, full: d.display_name, pincode: a.postcode || '' };
+  }
+
+  async function reverseGeocode(lat, lng, signal) {
+    const key = lat.toFixed(5) + ',' + lng.toFixed(5);
+    if (cache.has(key)) return cache.get(key);
+    const url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18' +
+                `&lat=${lat}&lon=${lng}&accept-language=en`;
+    const res = await fetch(url, { signal });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!data || data.error) return null;
+    const addr = formatAddress(data);
+    cache.set(key, addr);
+    return addr;
+  }
+
+  function cancelLookup() {
+    lookupId++;
+    if (lookupCtrl) lookupCtrl.abort();
+  }
+
+  async function lookupAddress() {
+    cancelLookup();
+    const id = lookupId;
+    lookupCtrl = new AbortController();
+    const lat = state.lat, lng = state.lng;
+    setStatus('Address dhoondh rahe hain…');
+    try {
+      const addr = await reverseGeocode(lat, lng, lookupCtrl.signal);
+      if (id !== lookupId) return;
+      lastLookupPt = { lat, lng };
+      ui.coords.textContent = fmt(lat, lng);
+      if (addr) {
+        state.addr = { ...addr, lat, lng };
+        ui.line1.textContent = addr.line1;
+        ui.line2.textContent = addr.line2;
+        ui.confirm.disabled = false;
+      } else {
+        state.addr = null;
+        ui.line1.textContent = 'Is jagah ka address nahi mila';
+        ui.line2.textContent = 'Pin ko kisi road ya building par le jaayein';
+        ui.confirm.disabled = true;
+      }
+      setStatus('');
+    } catch (err) {
+      if (err.name === 'AbortError' || id !== lookupId) return;
+      state.addr = null;
+      ui.confirm.disabled = true;
+      setStatus('Address load nahi hua. Internet check karke dobara try karein.', 'error');
+    }
+  }
+
+  /* ---------- Search (text -> map, worldwide) ---------- */
+  function hideSuggestions() { ui.suggestions.classList.remove('show'); }
+
+  function renderSuggestions(list, emptyMsg) {
+    ui.suggestions.textContent = '';
+    if (!list.length) {
+      const d = document.createElement('div');
+      d.className = 'empty';
+      d.textContent = emptyMsg || 'Koi result nahi mila';
+      ui.suggestions.appendChild(d);
+    } else {
+      list.forEach((item) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const name = document.createElement('span');
+        name.className = 'name';
+        name.textContent = item.name || item.display_name.split(',')[0];
+        const sub = document.createElement('span');
+        sub.className = 'sub';
+        sub.textContent = item.display_name;
+        btn.append(name, sub);
+        btn.addEventListener('click', () => selectSuggestion(item));
+        ui.suggestions.appendChild(btn);
+      });
+    }
+    ui.suggestions.classList.add('show');
+  }
+
+  function selectSuggestion(item) {
+    hideSuggestions();
+    ui.search.value = item.name || item.display_name.split(',')[0];
+    ui.search.blur();
+    pauseFollow();
+    const broad = ['city', 'state', 'county', 'district', 'state_district', 'country'].includes(item.addresstype);
+    map.setView([parseFloat(item.lat), parseFloat(item.lon)], broad ? 13 : 17);
+  }
+
+  async function runSearch(q) {
+    if (searchCtrl) searchCtrl.abort();
+    searchCtrl = new AbortController();
+    try {
+      const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6' +
+                  `&accept-language=en&q=${encodeURIComponent(q)}`;
+      const res = await fetch(url, { signal: searchCtrl.signal });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      renderSuggestions(await res.json());
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+      renderSuggestions([], 'Search fail hua. Internet check karein.');
+    }
+  }
+
+  ui.search.addEventListener('input', () => {
+    const q = ui.search.value.trim();
+    clearTimeout(searchTimer);
+    if (q.length < 3) { hideSuggestions(); return; }
+    searchTimer = setTimeout(() => runSearch(q), 400);
+  });
+
+  ui.search.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') hideSuggestions();
+    if (e.key === 'Enter') {
+      const first = ui.suggestions.querySelector('button');
+      if (first) { e.preventDefault(); first.click(); }
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.head')) hideSuggestions();
+  });
+
+  /* ---------- Approximate location (internet/IP) fallback ---------- */
+  async function approxLocate(msg) {
+    showAlert(msg, 'warn');
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const d = await res.json();
+      if (typeof d.latitude !== 'number' || typeof d.longitude !== 'number') throw new Error('no coords');
+      map.setView([d.latitude, d.longitude], 12);
+      const where = [d.city, d.country_name].filter(Boolean).join(', ');
+      showAlert(`${msg} Abhi internet se approximate location dikha rahe hain${where ? ` (${where})` : ''}. Exact ke liye GPS allow karein.`, 'warn');
+    } catch {
+      showAlert(`${msg} Map par apni jagah dhoondh kar pin set karein ya upar search karein.`, 'warn');
+    }
+  }
+
+  /* ---------- Live location (GPS watch) ---------- */
+  function updateLiveButton() {
+    const on = watchId !== null;
+    ui.locate.classList.toggle('on', on && follow);
+    ui.locate.classList.toggle('paused', on && !follow);
+    ui.locate.setAttribute('aria-pressed', String(on));
+    ui.locate.title = !on ? 'Live location chalu karein'
+      : follow ? 'Live location band karein'
+      : 'Meri location par wapas center karein';
+  }
+
+  function refreshLiveAlert() {
+    if (watchId === null) return;
+    const acc = lastAcc != null ? ` (±${Math.round(lastAcc)} m)` : '';
+    const text = follow
+      ? `Live location on${acc}. Map aapke saath move ho raha hai.`
+      : `Live location on${acc}. Map drag kiya hai. Locate button dabakar wapas center karein.`;
+    const weak = lastAcc != null && lastAcc > 100;
+    showAlert(weak ? text + ' GPS weak hai, khuli jagah par jaayein ya device ka GPS on karein.' : text,
+              weak ? 'warn' : 'info');
+  }
+
+  function pauseFollow() {
+    if (!follow) return;
+    follow = false;
+    ui.pin.hidden = false;
+    updateLiveButton();
+    refreshLiveAlert();
+  }
+
+  function resumeFollow() {
+    follow = true;
+    ui.pin.hidden = true;
+    if (dot) map.panTo(dot.getLatLng());
+    updateLiveButton();
+    refreshLiveAlert();
+  }
+
+  function onFix(pos) {
+    const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+    const ll = [lat, lng];
+    lastAcc = accuracy;
+
+    if (!dot) {
+      dot = L.marker(ll, { icon: LIVE_ICON, interactive: false, keyboard: false }).addTo(map);
+      ring = L.circle(ll, {
+        radius: accuracy, color: '#1a73e8', weight: 1, fillColor: '#1a73e8', fillOpacity: 0.12, interactive: false
+      }).addTo(map);
+    } else {
+      dot.setLatLng(ll);
+      ring.setLatLng(ll).setRadius(accuracy);
+    }
+
+    if (firstFix) {
+      firstFix = false;
+      map.setView(ll, 17);          // first fix: jump to the user
+    } else if (follow) {
+      map.panTo(ll, { animate: true, duration: 0.5 });
+    }
+    refreshLiveAlert();
+  }
+
+  function onGeoError(err) {
+    const denied = err.code === 1;
+    if (!dot) {
+      // No GPS fix yet: stop watching and fall back to the approximate location
+      stopLive();
+      const why = denied
+        ? (location.protocol === 'file:' || !window.isSecureContext
+            ? FILE_TIP
+            : 'GPS permission block hai. Address bar ke lock/tune icon me Location ko "Allow" karke page reload karein.')
+        : 'GPS se abhi location nahi mili.';
+      approxLocate(why);
+      return;
+    }
+    if (denied) {
+      stopLive();
+      showAlert('Location permission band ho gayi. Dobara on karne ke liye locate button dabayein.', 'error');
+    } else {
+      showAlert('GPS signal kamzor hai. Khuli jagah par jaayein.', 'warn');
+    }
+  }
+
+  function startLive() {
+    if (watchId !== null) return;
+    if (!navigator.geolocation) {
+      approxLocate('Is browser me GPS support nahi hai.');
+      return;
+    }
+    follow = true;
+    firstFix = true;
+    lastAcc = null;
+    ui.pin.hidden = true;
+    showAlert('Aapki live location dhoondh rahe hain… Browser me "Allow" dabayein.', 'info');
+    watchId = navigator.geolocation.watchPosition(onFix, onGeoError, {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 20000
+    });
+    updateLiveButton();
+  }
+
+  function stopLive() {
+    if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+    follow = false;
+    firstFix = false;
+    lastAcc = null;
+    if (dot) { map.removeLayer(dot); dot = null; }
+    if (ring) { map.removeLayer(ring); ring = null; }
+    ui.pin.hidden = false;
+    updateLiveButton();
+    showAlert('');
+  }
+
+  // Button: off -> start live; paused -> re-center and follow; following -> stop
+  ui.locate.addEventListener('click', () => {
+    if (watchId === null) startLive();
+    else if (!follow) resumeFollow();
+    else stopLive();
+  });
+
+  /* ---------- Confirm ---------- */
+  ui.confirm.addEventListener('click', () => {
+    const a = state.addr;
+    if (!a) return;
+    const flat = ui.flat.value.trim();
+    const result = {
+      flat,
+      line1: a.line1,
+      line2: a.line2,
+      fullAddress: a.full,
+      pincode: a.pincode,
+      lat: +state.lat.toFixed(6),
+      lng: +state.lng.toFixed(6)
+    };
+    ui.rLine1.textContent = flat ? `${flat}, ${a.line1}` : a.line1;
+    ui.rLine2.textContent = a.line2;
+    ui.rCoords.textContent = fmt(result.lat, result.lng);
+    ui.result.hidden = false;
+
+    // Hooks for your own app / Android WebView
+    window.dispatchEvent(new CustomEvent('location-confirmed', { detail: result }));
+    if (typeof window.onLocationConfirmed === 'function') window.onLocationConfirmed(result);
+    if (window.Android && typeof window.Android.onLocationConfirmed === 'function') {
+      window.Android.onLocationConfirmed(JSON.stringify(result));
+    }
+  });
+
+  // Start live location automatically as soon as the page opens
+  startLive();
+})();
+</script>
+</body>
+</html>
